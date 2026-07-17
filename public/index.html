@@ -3,96 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serenia - Iniciar Sesión</title>
-    <!-- Favicon para la pestaña del navegador web -->
-    <link rel="icon" href="logo.png" type="image/png">
+    <title>Serenia</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="auth-page"> <!-- NUEVO: Clase auth-page para centrado web -->
-
-<div class="auth-container">
-    <img src="logo.png" alt="Serenia Logo" class="app-logo">
-    <h2 class="text-center" style="margin-bottom: 1.5rem;">Serenia</h2>
-
-    <form id="loginForm">
-        <div class="form-group">
-            <label for="loginEmail">Correo Electrónico</label>
-            <input type="email" id="loginEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
-        </div>
-        <div class="form-group">
-            <label for="loginPassword">Contraseña</label>
-            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
-        </div>
-
-        <span class="forgot-link" id="goToForgotLink">¿Olvidaste tu contraseña?</span>
-        <button type="submit" class="btn btn-primary">Ingresar</button>
-
-        <p class="text-center mt-3" style="font-size: 0.875rem; color: var(--text-muted);">
-            ¿No tienes cuenta? <a href="register.html" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Regístrate</a>
-        </p>
-    </form>
-
-    <form id="forgotForm" class="hidden">
-        <h3 style="margin-bottom: 0.5rem; font-size: 1.15rem;">Recuperar Acceso</h3>
-        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;">Ingresa tu correo para enviarte un código de reinicio temporal.</p>
-
-        <div class="form-group">
-            <label for="forgotEmail">Correo Electrónico</label>
-            <input type="email" id="forgotEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Enviar Código</button>
-        <span class="forgot-link go-back-login text-center mt-3" style="display: block;">Volver al Login</span>
-    </form>
-
-    <form id="resetPasswordForm" class="hidden">
-        <h3 style="margin-bottom: 0.5rem; font-size: 1.15rem;">Restablecer Contraseña</h3>
-        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;">Introduce el código de 6 dígitos enviado a tu correo junto a tu nueva clave.</p>
-
-        <div class="form-group">
-            <label for="resetCode">Código de Verificación</label>
-            <input type="text" id="resetCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
-        </div>
-
-        <div class="form-group">
-            <label for="resetNewPassword">Nueva Contraseña</label>
-            <input type="password" id="resetNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
-
-        <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.875rem;">
-            <span id="btnResendResetCode" style="color: var(--accent-primary); cursor: pointer;">Reenviar código</span>
-            <span class="go-back-login" style="color: var(--text-muted); cursor: pointer;">Volver al Login</span>
-        </div>
-    </form>
-</div>
-
-<script src="js/auth.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('token');
-        const usuario = localStorage.getItem('usuario');
-        if (token && usuario) {
-            window.location.href = "dashboard.html";
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #111827;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --accent-primary: #ef4444; 
+            --accent-hover: #dc2626;
+            --border-color: #1f2937;
+            --input-bg: #030712;
+            --success: #10b981;
         }
-    });
 
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
-    document.getElementById('goToForgotLink').addEventListener('click', () => {
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('forgotForm').classList.remove('hidden');
-    });
-    document.querySelectorAll('.go-back-login').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.getElementById('forgotForm').classList.add('hidden');
-            document.getElementById('resetPasswordForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.remove('hidden');
-        });
-    });
-    document.getElementById('forgotForm').addEventListener('submit', handleForgotPasswordRequest);
-    document.getElementById('resetPasswordForm').addEventListener('submit', handleResetPasswordSubmit);
-</script>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
+        
+        /* CONTENEDOR PRINCIPAL DEL LOGIN */
+        .main-container { display: flex; width: 100%; min-height: 100vh; }
+
+        /* COLUMNA IZQUIERDA (INFO) */
+        .info-section {
+            flex: 1.2;
+            background: linear-gradient(135deg, rgba(11, 15, 25, 0.9), rgba(23, 16, 16, 0.95)), 
+                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200') no-repeat center center/cover;
+            display: flex; flex-direction: column; justify-content: center; padding: 80px; border-right: 1px solid var(--border-color);
+        }
+        .brand-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; }
+        .brand-logo-img { width: 60px; height: 60px; object-fit: contain; border-radius: 14px; }
+        .brand-name { font-size: 32px; font-weight: 800; background: linear-gradient(to right, #fff, var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-title { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -2px; }
+        .hero-subtitle { font-size: 18px; color: var(--text-muted); line-height: 1.6; max-width: 550px; margin-bottom: 40px; }
+
+        /* COLUMNA DERECHA (FORMULARIOS) */
+        .auth-section { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background-color: #030712; }
+        .auth-card { width: 100%; max-width: 420px; background-color: var(--card-bg); border-radius: 24px; padding: 40px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); position: relative; }
+        
+        .auth-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; }
+        .tab-btn { flex: 1; background: none; border: none; color: var(--text-muted); font-size: 16px; font-weight: 600; padding: 12px 0; cursor: pointer; text-align: center; position: relative; }
+        .tab-btn.active { color: var(--text-main); }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 25%; width: 50%; height: 3px; background-color: var(--accent-primary); border-radius: 3px; }
+
+        /* ALERTAS */
+        .custom-alert { padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; line-height: 1.4; }
+        .custom-alert.alert-error { background-color: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-primary); color: #fca5a5; }
+        .custom-alert.alert-success { background-color: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); color: #a7f3d0; }
+
+        /* BOTONES OAUTH */
+        .oauth-buttons-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+        .oauth-btn { width: 100%; border: none; padding: 12px 16px; border-radius: 99px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; }
+        .btn-google { background-color: var(--text-main); color: #000; }
+        .btn-facebook { background-color: #1877f2; color: white; }
+        
+        .divider { display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
+        .divider:not(:empty)::before { margin-right: .5em; }
+        .divider:not(:empty)::after { margin-left: .5em; }
+
+        /* ENTRADAS DE FORMULARIO */
+        .form-group { margin-bottom: 20px; position: relative; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper i.input-icon { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
+        .form-control { width: 100%; background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 14px 16px 14px 45px; border-radius: 12px; font-size: 15px; outline: none; }
+        .form-control:focus { border-color: var(--accent-primary); }
+        
+        .toggle-password { position: absolute; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; z-index: 5; }
+        .submit-btn { width: 100%; background-color: var(--accent-primary); color: white; border: none; padding: 14px; border-radius: 99px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .submit-btn:hover { background-color: var(--accent-hover); }
+
+        .forgot-link { display: block; text-align: right; font-size: 13px; color: var(--text-muted); margin-top: -10px; margin-bottom: 20px; text-decoration: none; cursor: pointer; }
+        .forgot-link:hover { color: var(--accent-primary); }
+
+        /* DASHBOARD */
+        .dashboard-screen { width: 100%; min-height: 100vh; background-color: #030712; display: flex; flex-direction: column; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); position: relative; }
+        
+        .user-profile-menu { display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; }
+        .user-avatar { width: 42px; height: 42px; border-radius: 50%; background-color: var(--accent-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid var(--border-color); object-fit: cover; }
+        
+        .dropdown-profile { position: absolute; top: 55px; right: 0; width: 290px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        
+        .dashboard-content { padding: 40px; display: flex; flex-direction: column; gap: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .alert-box { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-primary); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; }
+
+        .file-input-wrapper { display: block; background-color: var(--input-bg); border: 1px dashed var(--border-color); padding: 10px; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; color: var(--text-muted); }
+        .file-input-wrapper:hover { border-color: var(--accent-primary); color: white; }
+
+        .hidden { display: none !important; }
+
+        /* ==========================================
+           MEDIA QUERIES (DISEÑO RESPONSIVO MÓVIL)
+           ========================================== */
+        @media (max-width: 900px) {
+            .main-container { flex-direction: column; }
+            .info-section { flex: none; padding: 40px 20px; text-align: center; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .brand-wrapper { justify-content: center; margin-bottom: 20px; }
+            .hero-title { font-size: 32px; margin-bottom: 15px; }
+            .hero-subtitle { font-size: 15px; margin: 0 auto; }
+            .auth-section { padding: 30px 15px; }
+            .auth-card { padding: 30px 20px; }
+            
+            .navbar { padding: 15px 20px; }
+            .dashboard-content { padding: 20px 15px; }
+            .alert-box { flex-direction: column; text-align: center; padding: 20px; gap: 15px; }
+            .dropdown-profile { right: -15px; width: calc(100vw - 30px); max-width: 320px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container" id="loginScreen">
+        <div class="info-section">
+            <div class="brand-wrapper">
+                <img src="logo.png" alt="Serenia Logo" class="brand-logo-img" onerror="this.style.display='none';">
+                <div class="brand-name">Serenia</div>
+            </div>
+            <h1 class="hero-title">Lo que está pasando ahora.</h1>
+            <p class="hero-subtitle">Únete hoy a la plataforma inteligente de respuesta inmediata ante situaciones de emergencia y desastres.</p>
+        </div>
+
+        <div class="auth-section">
+            <div class="auth-card">
+                
+                <div id="globalAlert" class="custom-alert hidden"></div>
+
+                <div class="auth-tabs" id="authTabs">
+                    <button class="tab-btn active" id="tabLoginBtn">Iniciar Sesión</button>
+                    <button class="tab-btn" id="tabRegisterBtn">Crear Cuenta</button>
+                </div>
+
+                <div class="oauth-buttons-container" id="oauthContainer">
+                    <button type="button" class="oauth-btn btn-google" onclick="alert('Google disponible próximamente.')">
+                        <i class="fa-brands fa-google"></i> Continuar con Google
+                    </button>
+                    <button type="button" class="oauth-btn btn-facebook" onclick="alert('Facebook disponible próximamente.')">
+                        <i class="fa-brands fa-facebook-f"></i> Continuar con Facebook
+                    </button>
+                </div>
+
+                <div class="divider" id="dividerText">o con tu correo</div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-envelope input-icon"></i>
+                            <input type="email" id="loginEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="toggle-password" data-target="loginPassword">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <span class="forgot-link" id="goToForgotLink">¿Olvidaste tu contraseña?</span>
+                    <button type="submit" class="submit-btn">Ingresar</button>
+                </form>
+
+                <form id="forgotForm" class="hidden">
+                    <h3 style="margin-bottom: 15px; font-size: 18px;">Recuperar Acceso</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Ingresa tu correo para enviarte un código de reinicio temporal.</p>
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-envelope input-icon"></i>
+                            <input type="email" id="forgotEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Enviar Código</button>
+                    <span class="forgot-link go-back-login" style="text-align: center; margin-top: 20px; display: block;">Volver al Login</span>
+                </form>
+
+                <form id="resetPasswordForm" class="hidden">
+                    <h3 style="margin-bottom: 15px; font-size: 18px;">Restablecer Contraseña</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Revisa tu correo e introduce el código junto a tu nueva clave.</p>
+                    <div class="form-group">
+                        <label>Código de Verificación</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-key input-icon"></i>
+                            <input type="text" id="resetCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="resetNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
+                            <button type="button" class="toggle-password" data-target="resetNewPassword">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Actualizar Contraseña</button>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px;">
+                        <span id="btnResendResetCode" class="forgot-link" style="margin: 0; cursor: pointer;">Reenviar código</span>
+                        <span class="forgot-link go-back-login" style="margin: 0; cursor: pointer;">Volver al Login</span>
+                    </div>
+                </form>
+
+                <form id="registerForm" class="hidden">
+                    <div class="form-group"><label>Nombre</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regNombre" class="form-control" required></div></div>
+                    <div class="form-group"><label>Apellido</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regApellido" class="form-control" required></div></div>
+                    <div class="form-group"><label>Correo Electrónico</label><div class="input-wrapper"><i class="fa-solid fa-envelope input-icon"></i><input type="email" id="regEmail" class="form-control" required></div></div>
+                    <div class="form-group"><label>Fecha de Nacimiento</label><div class="input-wrapper"><i class="fa-solid fa-calendar input-icon"></i><input type="date" id="regFecha" class="form-control" required></div></div>
+                    <div class="form-group"><label>Contraseña</label><div class="input-wrapper"><i class="fa-solid fa-lock input-icon"></i><input type="password" id="regPassword" class="form-control" required><button type="button" class="toggle-password" data-target="regPassword"><i class="fa-solid fa-eye"></i></button></div></div>
+                    <button type="submit" class="submit-btn">Registrarse</button>
+                </form>
+
+                <form id="verifyForm" class="hidden">
+                    <h3 style="margin-bottom: 15px; font-size: 18px;">Verificación de Cuenta</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Introduce el token de seguridad enviado a tu buzón de correo electrónico.</p>
+                    <div class="form-group">
+                        <label>Código de 6 dígitos</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-key input-icon"></i>
+                            <input type="text" id="verifyCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">Confirmar Cuenta</button>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px;">
+                        <span id="btnResendCode" class="forgot-link" style="margin: 0; cursor: pointer;">Reenviar código</span>
+                        <span class="forgot-link go-back-login" style="margin: 0; cursor: pointer;">Volver al Login</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-screen hidden" id="dashboardScreen">
+        <div class="navbar">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="logo.png" alt="Logo" style="width: 35px; height: 35px; object-fit: contain;">
+                <span style="font-weight: 800; font-size: 20px;">Serenia Panel</span>
+            </div>
+            
+            <div class="user-profile-menu" id="userMenuBtn">
+                <span id="navUserName">Usuario</span>
+                <img id="navAvatar" src="" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=ef4444&color=fff';">
+                
+                <div class="dropdown-profile hidden" id="profileDropdown">
+                    <h4 style="margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Editar Mi Perfil</h4>
+                    
+                    <div class="form-group"><label>Nombre</label><input type="text" id="profNombre" class="form-control" style="padding: 8px 12px;"></div>
+                    <div class="form-group"><label>Apellido</label><input type="text" id="profApellido" class="form-control" style="padding: 8px 12px;"></div>
+                    <div class="form-group"><label>Teléfono</label><input type="text" id="profTelefono" class="form-control" style="padding: 8px 12px;" placeholder="+593..."></div>
+                    
+                    <div class="form-group">
+                        <label>Foto de Perfil</label>
+                        <label class="file-input-wrapper">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> <span id="fileNameLabel">Seleccionar foto de tu equipo</span>
+                            <input type="file" id="profFotoFile" accept="image/*" style="display: none;">
+                        </label>
+                    </div>
+                    
+                    <button type="button" class="submit-btn" id="btnSaveProfile" style="padding: 8px; font-size: 14px; margin-bottom: 10px;">Guardar Cambios</button>
+                    <button type="button" class="submit-btn" id="btnLogout" style="padding: 8px; font-size: 14px; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);">Cerrar Sesión</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-content">
+            <h1 style="font-size: 32px; font-weight: 800;">Bienvenido de vuelta, <span id="dashWelcomeName" style="color: var(--accent-primary);"></span></h1>
+            <div class="alert-box">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 36px; color: var(--accent-primary);"></i>
+                <div>
+                    <h3 style="font-size: 18px; margin-bottom: 4px;">Monitoreo de Emergencias Activo</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">El sistema se encuentra en línea.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
