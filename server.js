@@ -31,7 +31,7 @@ async function enviarCorreo(destinatario, asunto, mensaje) {
         const response = await axios.post(
             "https://api.brevo.com/v3/smtp/email",
             {
-                sender: { name: "GeoAlerta", email: "jesusmedrandam@gmail.com" },
+                sender: { name: "Serenia", email: "jesusmedrandam@gmail.com" },
                 to: [{ email: destinatario }],
                 subject: asunto,
                 textContent: mensaje
@@ -134,7 +134,7 @@ app.post('/api/auth/register', async (req, res) => {
             [nombre, apellido, email, fecha_nacimiento, hashedPassword, codigo]
         );
 
-        enviarCorreo(email, 'Código de Verificación - GeoAlerta', `Tu código de verificación es: ${codigo}`);
+        enviarCorreo(email, 'Código de Verificación - Serenia', `Tu código de verificación es: ${codigo}`);
         return res.status(201).json({ mensaje: 'Usuario creado. Introduce el código enviado a tu correo.' });
     } catch (err) {
         console.error("Error en registro:", err);
@@ -202,7 +202,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
         await pool.query('UPDATE usuarios SET codigo_verificacion = $1 WHERE email = $2', [codigo, email]);
 
-        enviarCorreo(email, 'Restablecer Contraseña - GeoAlerta', `Tu código para cambiar la contraseña es: ${codigo}`);
+        enviarCorreo(email, 'Restablecer Contraseña - Serenia', `Tu código para cambiar la contraseña es: ${codigo}`);
         return res.json({ mensaje: 'Código de recuperación generado.' });
     } catch (err) {
         return res.status(500).json({ mensaje: 'Error en el servidor al procesar la solicitud.' });
