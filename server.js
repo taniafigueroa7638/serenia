@@ -31,7 +31,7 @@ async function enviarCorreo(destinatario, asunto, mensaje) {
         const response = await axios.post(
             "https://api.brevo.com/v3/smtp/email",
             {
-                sender: { name: "Serenia", email: "jesusmedrandam@gmail.com" },
+                sender: { name: "Serenia", email: "taniafigueroa7638@gmail.com" },
                 to: [{ email: destinatario }],
                 subject: asunto,
                 textContent: mensaje
