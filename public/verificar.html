@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serenia - Verificar Código</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        
+        .app-logo {
+            display: block;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem auto;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body style="justify-content: center; align-items: center; padding: 1rem;">
+
+<div class="auth-container">
+
+    <img src="logo.png" alt="Serenia Logo" class="app-logo">
+
+    <h2 style="text-align: center; margin-bottom: 0.5rem; font-size: 1.5rem;">Verifica tu Cuenta</h2>
+    <p style="text-align: center; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">
+        Ingresa el código de 6 dígitos enviado a tu correo electrónico.
+    </p>
+
+    <form id="verifyForm">
+        <div class="form-group">
+            <label for="verifyCode" style="text-align: center;">Código de Verificación</label>
+            <input type="text" id="verifyCode" class="form-control" placeholder="000000"
+                   style="text-align: center; font-size: 1.25rem; tracking-content: 0.25rem; font-weight: bold;"
+                   maxlength="6" required>
+        </div>
+
+        <div id="newPasswordGroup" class="form-group hidden" style="position: relative;">
+            <label for="resetNewPassword">Nueva Contraseña</label>
+            <input type="password" id="resetNewPassword" class="form-control" placeholder="••••••••">
+            <button type="button" class="toggle-password" data-target="resetNewPassword" style="position: absolute; right: 10px; top: 32px; background: none; border: none; color: var(--text-muted);">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+        </div>
+
+        <button type="submit" id="btnSubmitVerify" class="btn btn-primary">Confirmar Código</button>
+        <button type="button" id="btnResendCode" class="btn" style="background: transparent; color: var(--accent-primary); margin-top: 0.5rem; font-size: 0.875rem; font-weight: 600;">Reenviar Código</button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+        <p><a href="login.html" style="color: var(--text-muted); text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Volver al Login</a></p>
+    </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+    // Al cargar la pantalla, verificamos si es una activación normal o un cambio de contraseña
+    const emailParaVerificar = localStorage.getItem('email_verificar');
+    const esRecuperacion = localStorage.getItem('flujo_recuperacion') === 'true';
+
+    if (!emailParaVerificar) {
+        window.location.href = "login.html";
+    }
+
+    if (esRecuperacion) {
+        document.getElementById('newPasswordGroup').classList.remove('hidden');
+        document.getElementById('resetNewPassword').setAttribute('required', 'true');
+    }
+
+    // Envío del código al Backend
+    document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const codigo = document.getElementById('verifyCode').value;
+
+        if (esRecuperacion) {
+            // Lógica de Restablecer Contraseña Olvidada
+            const nuevaPassword = document.getElementById('resetNewPassword').value;
+            try {
+                const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailParaVerificar, codigo, nuevaPassword })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.clear();
+                    showAlert('Contraseña actualizada con éxito.', 'success');
+                    setTimeout(() => { window.location.href = "login.html"; }, 1500);
+                } else {
+                    showAlert(data.mensaje || 'Código incorrecto.', 'error');
+                }
+            } catch (err) { showAlert('Error en el servidor.', 'error'); }
+        } else {
+            // Lógica de Activación de Cuenta tras el registro
+            try {
+                const res = await fetch(`${API_URL}/api/auth/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailParaVerificar, codigo })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.clear();
+                    showAlert('¡Cuenta activada con éxito! Ya puedes iniciar sesión.', 'success');
+                    setTimeout(() => { window.location.href = "login.html"; }, 1500);
+                } else {
+                    showAlert(data.mensaje || 'Código inválido.', 'error');
+                }
+            } catch (err) { showAlert('Error al verificar.', 'error'); }
+        }
+    });
+
+    // Botón Reenviar Código
+    document.getElementById('btnResendCode').addEventListener('click', async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: emailParaVerificar })
+            });
+            if (res.ok) {
+                showAlert('¡Código enviado nuevamente a tu correo!', 'success');
+            } else {
+                showAlert('No se pudo reenviar el código.', 'error');
+            }
+        } catch (err) { showAlert('Error con el servidor.', 'error'); }
+    });
+</script>
+</body>
+</html>
