@@ -25,7 +25,7 @@ const pool = new Pool({
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mi_clave_secreta_seenia';
 
-// === FUNCIÓN DE ENVÍO POR API DE BREVO ===
+// === FUNCIÓN DE ENVÍO POR API DE BREVO (CORREGIDA) ===
 async function enviarCorreo(destinatario, asunto, mensaje) {
     try {
         const response = await axios.post(
@@ -34,7 +34,8 @@ async function enviarCorreo(destinatario, asunto, mensaje) {
                 sender: { name: "Serenia", email: "taniafigueroa7638@gmail.com" },
                 to: [{ email: destinatario }],
                 subject: asunto,
-                textContent: mensaje
+                // Usamos htmlContent ya que Brevo procesa mejor las plantillas y correos con HTML básico
+                htmlContent: `<html><body><p>${mensaje}</p></body></html>`
             },
             {
                 headers: {
@@ -47,8 +48,11 @@ async function enviarCorreo(destinatario, asunto, mensaje) {
         return true;
     } catch (error) {
         console.error("❌ API Brevo - Error al enviar el correo:");
-        if (error.response) console.error(error.response.data);
-        else console.error(error.message);
+        if (error.response) {
+            console.error(JSON.stringify(error.response.data, null, 2));
+        } else {
+            console.error(error.message);
+        }
         return false;
     }
 }
@@ -81,7 +85,7 @@ initDB();
 // Middleware de autenticación
 const verificarToken = (req, res, next) => {
     const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) return res.status(403).json({ mensaje: 'Acceso no authorized.' });
+    if (!token) return res.status(403).json({ mensaje: 'Acceso no autorizado.' });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
@@ -92,7 +96,7 @@ const verificarToken = (req, res, next) => {
     }
 };
 
-// Validar sesión activa (F5) - ACTUALIZADO: Retorna fecha_nacimiento
+// Validar sesión activa (F5)
 app.get('/api/auth/me', verificarToken, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuarioId]);
@@ -110,7 +114,7 @@ app.get('/api/auth/me', verificarToken, async (req, res) => {
                 apellido: usuario.apellido,
                 email: usuario.email,
                 telefono: usuario.telefono,
-                fecha_nacimiento: usuario.fecha_nacimiento, // Agregado para persistencia en front
+                fecha_nacimiento: usuario.fecha_nacimiento,
                 foto_url: fotoBase64
             }
         });
@@ -119,7 +123,7 @@ app.get('/api/auth/me', verificarToken, async (req, res) => {
     }
 });
 
-// 1. REGISTRO
+// 1. REGISTRO (CON AWAIT EN ENVIARCORREO)
 app.post('/api/auth/register', async (req, res) => {
     const { nombre, apellido, email, fecha_nacimiento, password } = req.body;
     try {
@@ -134,7 +138,9 @@ app.post('/api/auth/register', async (req, res) => {
             [nombre, apellido, email, fecha_nacimiento, hashedPassword, codigo]
         );
 
-        enviarCorreo(email, 'Código de Verificación - Serenia', `Tu código de verificación es: ${codigo}`);
+        // Agregamos el "await" crucial aquí para asegurar el envío antes de terminar la petición
+        await enviarCorreo(email, 'Código de Verificación - Serenia', `Tu código de verificación es: <strong>${codigo}</strong>`);
+        
         return res.status(201).json({ mensaje: 'Usuario creado. Introduce el código enviado a tu correo.' });
     } catch (err) {
         console.error("Error en registro:", err);
@@ -156,7 +162,7 @@ app.post('/api/auth/verify', async (req, res) => {
     }
 });
 
-// 3. INICIO DE SESIÓN - ACTUALIZADO: Retorna fecha_nacimiento
+// 3. INICIO DE SESIÓN
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -183,7 +189,7 @@ app.post('/api/auth/login', async (req, res) => {
                 apellido: usuario.apellido,
                 email: usuario.email,
                 telefono: usuario.telefono,
-                fecha_nacimiento: usuario.fecha_nacimiento, // Agregado
+                fecha_nacimiento: usuario.fecha_nacimiento,
                 foto_url: fotoBase64
             }
         });
@@ -192,7 +198,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// 4. SOLICITAR RECUPERACIÓN DE CONTRASEÑA
+// 4. SOLICITAR RECUPERACIÓN DE CONTRASEÑA (CON AWAIT EN ENVIARCORREO)
 app.post('/api/auth/forgot-password', async (req, res) => {
     const { email } = req.body;
     try {
@@ -202,7 +208,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
         await pool.query('UPDATE usuarios SET codigo_verificacion = $1 WHERE email = $2', [codigo, email]);
 
-        enviarCorreo(email, 'Restablecer Contraseña - Serenia', `Tu código para cambiar la contraseña es: ${codigo}`);
+        // Agregamos el "await" crucial aquí también
+        await enviarCorreo(email, 'Restablecer Contraseña - Serenia', `Tu código para cambiar la contraseña es: <strong>${codigo}</strong>`);
+        
         return res.json({ mensaje: 'Código de recuperación generado.' });
     } catch (err) {
         return res.status(500).json({ mensaje: 'Error en el servidor al procesar la solicitud.' });
@@ -224,35 +232,30 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 });
 
-// 6. ACTUALIZAR PERFIL (CON VALIDACIÓN DE CONTRASEÑA ACTUAL Y FECHA DE NACIMIENTO)
+// 6. ACTUALIZAR PERFIL
 app.put('/api/usuario/perfil', verificarToken, upload.single('foto_perfil'), async (req, res) => {
     const { nombre, apellido, telefono, fecha_nacimiento, passwordActual, passwordNueva } = req.body;
     
     try {
-        // 1. Buscar al usuario actual en la base de datos para validar credenciales e información previa
         const userQuery = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuarioId]);
         if (userQuery.rows.length === 0) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
         const usuarioDb = userQuery.rows[0];
 
-        let passwordFinal = usuarioDb.password; // Mantiene la contraseña actual por defecto
+        let passwordFinal = usuarioDb.password;
 
-        // 2. Si el usuario intenta cambiar su contraseña...
         if (passwordActual && passwordNueva) {
             const validPassword = await bcrypt.compare(passwordActual, usuarioDb.password);
             if (!validPassword) {
                 return res.status(400).json({ mensaje: 'La contraseña actual introducida es incorrecta.' });
             }
-            // Si la clave actual es correcta, hasheamos la nueva
             passwordFinal = await bcrypt.hash(passwordNueva, 10);
         }
 
-        // 3. Preparar la imagen si fue subida
         let fotoFinal = usuarioDb.foto_perfil;
         if (req.file) {
             fotoFinal = req.file.buffer;
         }
 
-        // 4. Ejecutar actualización unificada en PostgreSQL
         await pool.query(
             `UPDATE usuarios 
              SET nombre = $1, apellido = $2, telefono = $3, fecha_nacimiento = $4, password = $5, foto_perfil = $6 
@@ -260,7 +263,6 @@ app.put('/api/usuario/perfil', verificarToken, upload.single('foto_perfil'), asy
             [nombre, apellido, telefono, fecha_nacimiento, passwordFinal, fotoFinal, req.usuarioId]
         );
 
-        // 5. Obtener los nuevos datos actualizados para responderle al frontend
         const updated = await pool.query('SELECT * FROM usuarios WHERE id = $1', [req.usuarioId]);
         const user = updated.rows[0];
         
@@ -276,7 +278,7 @@ app.put('/api/usuario/perfil', verificarToken, upload.single('foto_perfil'), asy
                 apellido: user.apellido, 
                 email: user.email, 
                 telefono: user.telefono, 
-                fecha_nacimiento: user.fecha_nacimiento, // Agregado
+                fecha_nacimiento: user.fecha_nacimiento,
                 foto_url: fotoBase64 
             }
         });
