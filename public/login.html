@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoAlerta - Iniciar Sesión</title>
+    <!-- Favicon para la pestaña del navegador web -->
+    <link rel="icon" href="img/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="auth-page"> <!-- NUEVO: Clase auth-page para centrado web -->
+
+<div class="auth-container">
+    <img src="img/logo.png" alt="GeoAlerta Logo" class="app-logo">
+    <h2 class="text-center" style="margin-bottom: 1.5rem;">GeoAlerta</h2>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="loginEmail">Correo Electrónico</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Contraseña</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <span class="forgot-link" id="goToForgotLink">¿Olvidaste tu contraseña?</span>
+        <button type="submit" class="btn btn-primary">Ingresar</button>
+
+        <p class="text-center mt-3" style="font-size: 0.875rem; color: var(--text-muted);">
+            ¿No tienes cuenta? <a href="register.html" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Regístrate</a>
+        </p>
+    </form>
+
+    <form id="forgotForm" class="hidden">
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.15rem;">Recuperar Acceso</h3>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;">Ingresa tu correo para enviarte un código de reinicio temporal.</p>
+
+        <div class="form-group">
+            <label for="forgotEmail">Correo Electrónico</label>
+            <input type="email" id="forgotEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enviar Código</button>
+        <span class="forgot-link go-back-login text-center mt-3" style="display: block;">Volver al Login</span>
+    </form>
+
+    <form id="resetPasswordForm" class="hidden">
+        <h3 style="margin-bottom: 0.5rem; font-size: 1.15rem;">Restablecer Contraseña</h3>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;">Introduce el código de 6 dígitos enviado a tu correo junto a tu nueva clave.</p>
+
+        <div class="form-group">
+            <label for="resetCode">Código de Verificación</label>
+            <input type="text" id="resetCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
+        </div>
+
+        <div class="form-group">
+            <label for="resetNewPassword">Nueva Contraseña</label>
+            <input type="password" id="resetNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.875rem;">
+            <span id="btnResendResetCode" style="color: var(--accent-primary); cursor: pointer;">Reenviar código</span>
+            <span class="go-back-login" style="color: var(--text-muted); cursor: pointer;">Volver al Login</span>
+        </div>
+    </form>
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token');
+        const usuario = localStorage.getItem('usuario');
+        if (token && usuario) {
+            window.location.href = "dashboard.html";
+        }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    document.getElementById('goToForgotLink').addEventListener('click', () => {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('forgotForm').classList.remove('hidden');
+    });
+    document.querySelectorAll('.go-back-login').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('forgotForm').classList.add('hidden');
+            document.getElementById('resetPasswordForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        });
+    });
+    document.getElementById('forgotForm').addEventListener('submit', handleForgotPasswordRequest);
+    document.getElementById('resetPasswordForm').addEventListener('submit', handleResetPasswordSubmit);
+</script>
+</body>
+</html>
