@@ -1,0 +1,183 @@
+/* css/styles.css */
+
+:root {
+    --bg-color: #0b0f19;
+    --card-bg: #111827;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --accent-primary: #ef4444; 
+    --accent-hover: #dc2626;
+    --border-color: #1f2937;
+    --input-bg: #030712;
+    --success: #10b981;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* NUEVO: Clase específica para centrar formularios en monitores de PC */
+.auth-page {
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1rem;
+}
+
+.auth-container {
+    background-color: var(--card-bg);
+    padding: 2.5rem 2rem;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    max-width: 420px;
+    margin: auto;
+}
+
+/* Formularios y Botones */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.813rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.875rem 1rem;
+    border-radius: 12px;
+    font-size: 0.938rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.btn {
+    width: 100%;
+    padding: 0.875rem;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary { background: var(--accent-primary); color: white; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-success { background: var(--success); color: white; }
+.btn-danger { background: #b91c1c; color: white; }
+
+.hidden { display: none !important; }
+
+.forgot-link {
+    display: block;
+    text-align: right;
+    font-size: 0.813rem;
+    color: var(--text-muted);
+    margin-top: -0.5rem;
+    margin-bottom: 1.25rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.forgot-link:hover { color: var(--accent-primary); }
+.text-center { text-align: center; }
+.mt-3 { margin-top: 1rem; }
+
+/* Sistema de Alertas */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 350px;
+}
+
+.custom-toast {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 16px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    animation: toastIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.custom-toast.success { border-left: 4px solid var(--success); }
+.custom-toast.success i { color: var(--success); }
+.custom-toast.error { border-left: 4px solid var(--accent-primary); }
+.custom-toast.error i { color: var(--accent-primary); }
+.custom-toast.info { border-left: 4px solid #3b82f6; }
+.custom-toast.info i { color: #3b82f6; }
+
+@keyframes toastIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes toastOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+.app-logo {
+    display: block;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1rem auto;
+    object-fit: contain;
+}
+
+/* NUEVO: Adaptación para escritorio */
+@media (min-width: 768px) {
+    .auth-container {
+        max-width: 450px;
+        padding: 3rem;
+    }
+    
+    .dashboard-content {
+        padding: 3rem 2rem;
+    }
+    
+    .form-control {
+        font-size: 1rem;
+    }
+}
