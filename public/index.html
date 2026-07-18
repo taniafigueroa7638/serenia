@@ -9,40 +9,36 @@
     
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: #111827;
-            --text-main: #f9fafb;
-            --text-muted: #9ca3af;
+            /* Nueva paleta de colores claros */
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
             --accent-primary: #ef4444; 
             --accent-hover: #dc2626;
-            --border-color: #1f2937;
-            --input-bg: #030712;
+            --border-color: #e5e7eb;
+            --input-bg: #f9fafb;
             --success: #10b981;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
         
-        /* CONTENEDOR PRINCIPAL DEL LOGIN */
-        .main-container { display: flex; width: 100%; min-height: 100vh; }
+        /* LOGIN CENTRADO TOTALMENTE */
+        .main-container { display: flex; width: 100%; min-height: 100vh; justify-content: center; align-items: center; padding: 20px; }
 
-        /* COLUMNA IZQUIERDA (INFO) */
-        .info-section {
-            flex: 1.2;
-            background: linear-gradient(135deg, rgba(11, 15, 25, 0.9), rgba(23, 16, 16, 0.95)), 
-                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200') no-repeat center center/cover;
-            display: flex; flex-direction: column; justify-content: center; padding: 80px; border-right: 1px solid var(--border-color);
-        }
-        .brand-wrapper { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; }
-        .brand-logo-img { width: 60px; height: 60px; object-fit: contain; border-radius: 14px; }
-        .brand-name { font-size: 32px; font-weight: 800; background: linear-gradient(to right, #fff, var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-title { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -2px; }
-        .hero-subtitle { font-size: 18px; color: var(--text-muted); line-height: 1.6; max-width: 550px; margin-bottom: 40px; }
+        /* Ocultamos la sección lateral informativa antigua para centrar el login */
+        .info-section { display: none; }
 
-        /* COLUMNA DERECHA (FORMULARIOS) */
-        .auth-section { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background-color: #030712; }
-        .auth-card { width: 100%; max-width: 420px; background-color: var(--card-bg); border-radius: 24px; padding: 40px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4); position: relative; }
+        /* TARJETA DE AUTENTICACIÓN */
+        .auth-section { display: flex; align-items: center; justify-content: center; width: 100%; }
+        .auth-card { width: 100%; max-width: 440px; background-color: var(--card-bg); border-radius: 24px; padding: 40px; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); position: relative; }
         
+        /* LOGOTIPO SUPERIOR */
+        .login-logo-container { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 30px; text-align: center; }
+        .brand-logo-img { width: 70px; height: 70px; object-fit: contain; border-radius: 14px; }
+        .brand-name { font-size: 28px; font-weight: 800; color: var(--text-main); }
+
         .auth-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; }
         .tab-btn { flex: 1; background: none; border: none; color: var(--text-muted); font-size: 16px; font-weight: 600; padding: 12px 0; cursor: pointer; text-align: center; position: relative; }
         .tab-btn.active { color: var(--text-main); }
@@ -50,14 +46,14 @@
 
         /* ALERTAS */
         .custom-alert { padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; line-height: 1.4; }
-        .custom-alert.alert-error { background-color: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-primary); color: #fca5a5; }
-        .custom-alert.alert-success { background-color: rgba(16, 185, 129, 0.15); border: 1px solid var(--success); color: #a7f3d0; }
+        .custom-alert.alert-error { background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
+        .custom-alert.alert-success { background-color: #d1fae5; border: 1px solid #a7f3d0; color: #065f46; }
 
         /* BOTONES OAUTH */
         .oauth-buttons-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-        .oauth-btn { width: 100%; border: none; padding: 12px 16px; border-radius: 99px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; }
-        .btn-google { background-color: var(--text-main); color: #000; }
-        .btn-facebook { background-color: #1877f2; color: white; }
+        .oauth-btn { width: 100%; border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 99px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; }
+        .btn-google { background-color: #ffffff; color: #000; }
+        .btn-facebook { background-color: #1877f2; color: white; border: none; }
         
         .divider { display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
@@ -65,12 +61,12 @@
         .divider:not(:empty)::after { margin-left: .5em; }
 
         /* ENTRADAS DE FORMULARIO */
-        .form-group { margin-bottom: 20px; position: relative; }
+        .form-group { margin-bottom: 20px; position: relative; text-align: left; }
         .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
         .input-wrapper { position: relative; display: flex; align-items: center; }
         .input-wrapper i.input-icon { position: absolute; left: 16px; color: var(--text-muted); font-size: 16px; }
         .form-control { width: 100%; background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 14px 16px 14px 45px; border-radius: 12px; font-size: 15px; outline: none; }
-        .form-control:focus { border-color: var(--accent-primary); }
+        .form-control:focus { border-color: var(--accent-primary); background-color: #ffffff; }
         
         .toggle-password { position: absolute; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; z-index: 5; }
         .submit-btn { width: 100%; background-color: var(--accent-primary); color: white; border: none; padding: 14px; border-radius: 99px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
@@ -79,35 +75,25 @@
         .forgot-link { display: block; text-align: right; font-size: 13px; color: var(--text-muted); margin-top: -10px; margin-bottom: 20px; text-decoration: none; cursor: pointer; }
         .forgot-link:hover { color: var(--accent-primary); }
 
-        /* DASHBOARD */
-        .dashboard-screen { width: 100%; min-height: 100vh; background-color: #030712; display: flex; flex-direction: column; }
+        /* DASHBOARD MODERNO CLARO */
+        .dashboard-screen { width: 100%; min-height: 100vh; background-color: #f9fafb; display: flex; flex-direction: column; }
         .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); position: relative; }
         
         .user-profile-menu { display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; }
         .user-avatar { width: 42px; height: 42px; border-radius: 50%; background-color: var(--accent-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid var(--border-color); object-fit: cover; }
         
-        .dropdown-profile { position: absolute; top: 55px; right: 0; width: 290px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .dropdown-profile { position: absolute; top: 55px; right: 0; width: 290px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
         
         .dashboard-content { padding: 40px; display: flex; flex-direction: column; gap: 30px; max-width: 1200px; margin: 0 auto; width: 100%; }
-        .alert-box { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-primary); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; }
+        .alert-box { background: #fee2e2; border: 1px solid var(--accent-primary); border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; color: #991b1b; }
 
         .file-input-wrapper { display: block; background-color: var(--input-bg); border: 1px dashed var(--border-color); padding: 10px; border-radius: 12px; text-align: center; cursor: pointer; font-size: 13px; color: var(--text-muted); }
-        .file-input-wrapper:hover { border-color: var(--accent-primary); color: white; }
+        .file-input-wrapper:hover { border-color: var(--accent-primary); color: var(--text-main); }
 
+        /* ARREGLO DE VISUALIZACIÓN: Asegura el despliegue correcto en cualquier resolución */
         .hidden { display: none !important; }
 
-        /* ==========================================
-           MEDIA QUERIES (DISEÑO RESPONSIVO MÓVIL)
-           ========================================== */
         @media (max-width: 900px) {
-            .main-container { flex-direction: column; }
-            .info-section { flex: none; padding: 40px 20px; text-align: center; border-right: none; border-bottom: 1px solid var(--border-color); }
-            .brand-wrapper { justify-content: center; margin-bottom: 20px; }
-            .hero-title { font-size: 32px; margin-bottom: 15px; }
-            .hero-subtitle { font-size: 15px; margin: 0 auto; }
-            .auth-section { padding: 30px 15px; }
-            .auth-card { padding: 30px 20px; }
-            
             .navbar { padding: 15px 20px; }
             .dashboard-content { padding: 20px 15px; }
             .alert-box { flex-direction: column; text-align: center; padding: 20px; gap: 15px; }
@@ -117,18 +103,16 @@
 </head>
 <body>
 
+    <!-- CONTENEDOR PRINCIPAL -->
     <div class="main-container" id="loginScreen">
-        <div class="info-section">
-            <div class="brand-wrapper">
-                <img src="logo.png" alt="Serenia Logo" class="brand-logo-img" onerror="this.style.display='none';">
-                <div class="brand-name">Serenia</div>
-            </div>
-            <h1 class="hero-title">La importancia de la salud psicológica.</h1>
-            <p class="hero-subtitle">Únete hoy a la plataforma de salud psicológica.</p>
-        </div>
-
         <div class="auth-section">
             <div class="auth-card">
+                
+                <!-- LOGOTIPO EN LA PARTE SUPERIOR DEL CARD -->
+                <div class="login-logo-container">
+                    <img src="logo.png" alt="Serenia Logo" class="brand-logo-img" onerror="this.style.display='none';">
+                    <div class="brand-name">Serenia</div>
+                </div>
                 
                 <div id="globalAlert" class="custom-alert hidden"></div>
 
@@ -148,6 +132,7 @@
 
                 <div class="divider" id="dividerText">o con tu correo</div>
 
+                <!-- FORMULARIO LOGIN -->
                 <form id="loginForm">
                     <div class="form-group">
                         <label>Correo Electrónico</label>
@@ -170,6 +155,7 @@
                     <button type="submit" class="submit-btn">Ingresar</button>
                 </form>
 
+                <!-- FORMULARIO RECUPERAR ACCESO -->
                 <form id="forgotForm" class="hidden">
                     <h3 style="margin-bottom: 15px; font-size: 18px;">Recuperar Acceso</h3>
                     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Ingresa tu correo para enviarte un código de reinicio temporal.</p>
@@ -184,9 +170,11 @@
                     <span class="forgot-link go-back-login" style="text-align: center; margin-top: 20px; display: block;">Volver al Login</span>
                 </form>
 
+                <!-- FORMULARIO RESTABLECER CONTRASEÑA (DOBLE CAMPO APLICADO) -->
                 <form id="resetPasswordForm" class="hidden">
                     <h3 style="margin-bottom: 15px; font-size: 18px;">Restablecer Contraseña</h3>
                     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Revisa tu correo e introduce el código junto a tu nueva clave.</p>
+                    
                     <div class="form-group">
                         <label>Código de Verificación</label>
                         <div class="input-wrapper">
@@ -204,6 +192,17 @@
                             </button>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label>Confirmar Nueva Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="resetConfirmPassword" class="form-control" placeholder="Repite la contraseña" required>
+                            <button type="button" class="toggle-password" data-target="resetConfirmPassword">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="submit-btn">Actualizar Contraseña</button>
                     <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px;">
                         <span id="btnResendResetCode" class="forgot-link" style="margin: 0; cursor: pointer;">Reenviar código</span>
@@ -211,15 +210,38 @@
                     </div>
                 </form>
 
+                <!-- FORMULARIO CREAR CUENTA (DOBLE CAMPO APLICADO) -->
                 <form id="registerForm" class="hidden">
                     <div class="form-group"><label>Nombre</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regNombre" class="form-control" required></div></div>
                     <div class="form-group"><label>Apellido</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regApellido" class="form-control" required></div></div>
                     <div class="form-group"><label>Correo Electrónico</label><div class="input-wrapper"><i class="fa-solid fa-envelope input-icon"></i><input type="email" id="regEmail" class="form-control" required></div></div>
                     <div class="form-group"><label>Fecha de Nacimiento</label><div class="input-wrapper"><i class="fa-solid fa-calendar input-icon"></i><input type="date" id="regFecha" class="form-control" required></div></div>
-                    <div class="form-group"><label>Contraseña</label><div class="input-wrapper"><i class="fa-solid fa-lock input-icon"></i><input type="password" id="regPassword" class="form-control" required><button type="button" class="toggle-password" data-target="regPassword"><i class="fa-solid fa-eye"></i></button></div></div>
+                    
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="regPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
+                            <button type="button" class="toggle-password" data-target="regPassword">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmar Contraseña</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="regConfirmPassword" class="form-control" placeholder="Repite la contraseña" required>
+                            <button type="button" class="toggle-password" data-target="regConfirmPassword">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="submit-btn">Registrarse</button>
                 </form>
 
+                <!-- FORMULARIO VERIFICACIÓN (Solucionado para que use Flex/Block idéntico en PC y móvil) -->
                 <form id="verifyForm" class="hidden">
                     <h3 style="margin-bottom: 15px; font-size: 18px;">Verificación de Cuenta</h3>
                     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Introduce el token de seguridad enviado a tu buzón de correo electrónico.</p>
@@ -240,6 +262,7 @@
         </div>
     </div>
 
+    <!-- PANEL DASHBOARD -->
     <div class="dashboard-screen hidden" id="dashboardScreen">
         <div class="navbar">
             <div style="display: flex; align-items: center; gap: 10px;">
