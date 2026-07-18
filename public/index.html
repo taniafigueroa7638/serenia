@@ -4,16 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serenia</title>
+    <!-- Logotipo en la pestaña del navegador -->
     <link rel="icon" type="image/png" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
+            /* Nueva paleta de colores claros */
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
             --text-main: #111827;
             --text-muted: #6b7280;
+            
+            /* PSICOLOGÍA DEL COLOR: Azul Eléctrico Tecnológico (Confianza y seguridad) */
             --accent-primary: #2563eb; 
             --accent-hover: #1d4ed8;
             
@@ -65,7 +69,7 @@
         
         .toggle-password { position: absolute; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; z-index: 5; }
         
-        /* ESTILOS DE LOS BOTONES MEJORADOS CON ANIMACIÓN COMPACTA */
+        /* ESTILOS DE LOS BOTONES CON ANIMACIÓN */
         .submit-btn { width: 100%; background-color: var(--accent-primary); color: white; border: none; padding: 14px; border-radius: 99px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: background-color 0.2s ease, transform 0.1s ease; }
         .submit-btn:hover { background-color: var(--accent-hover); }
         .submit-btn:active { transform: scale(0.98); }
@@ -119,134 +123,138 @@
                     <button class="tab-btn" id="tabRegisterBtn">Crear Cuenta</button>
                 </div>
 
-                <div class="divider" id="dividerText">o con tu correo</div>
-
-                <!-- FORMULARIO LOGIN -->
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label>Correo Electrónico</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-envelope input-icon"></i>
-                            <input type="email" id="loginEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Contraseña</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
-                            <button type="button" class="toggle-password" data-target="loginPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <span class="forgot-link" id="goToForgotLink">¿Olvidaste tu contraseña?</span>
-                    <button type="submit" class="submit-btn">Ingresar</button>
-                </form>
-
-                <!-- FORMULARIO RECUPERAR ACCESO -->
-                <form id="forgotForm" class="hidden">
-                    <h3 style="margin-bottom: 15px; font-size: 18px;">Recuperar Acceso</h3>
-                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Ingresa tu correo para enviarte un código de reinicio temporal.</p>
-                    <div class="form-group">
-                        <label>Correo Electrónico</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-envelope input-icon"></i>
-                            <input type="email" id="forgotEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-btn">Enviar Código</button>
-                    <span class="forgot-link go-back-login" style="text-align: center; margin-top: 20px; display: block;">Volver al Login</span>
-                </form>
-
-                <!-- FORMULARIO RESTABLECER CONTRASEÑA -->
-                <form id="resetPasswordForm" class="hidden">
-                    <h3 style="margin-bottom: 15px; font-size: 18px;">Restablecer Contraseña</h3>
-                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Revisa tu correo e introduce el código junto a tu nueva clave.</p>
+                <!-- CONTENEDOR DE FORMULARIOS INTERNOS -->
+                <div class="auth-forms-container">
                     
-                    <div class="form-group">
-                        <label>Código de Verificación</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-key input-icon"></i>
-                            <input type="text" id="resetCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
+                    <!-- FORMULARIO LOGIN -->
+                    <form id="loginForm">
+                        <div class="divider" id="dividerText">o con tu correo</div>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-envelope input-icon"></i>
+                                <input type="email" id="loginEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Nueva Contraseña</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="resetNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
-                            <button type="button" class="toggle-password" data-target="resetNewPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+                                <button type="button" class="toggle-password" data-target="loginPassword">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Confirmar Nueva Contraseña</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="resetConfirmPassword" class="form-control" placeholder="Repite la contraseña" required>
-                            <button type="button" class="toggle-password" data-target="resetConfirmPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="submit-btn">Actualizar Contraseña</button>
-                    <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px;">
-                        <span id="btnResendResetCode" class="forgot-link" style="margin: 0; cursor: pointer;">Reenviar código</span>
-                        <span class="forgot-link go-back-login" style="margin: 0; cursor: pointer;">Volver al Login</span>
-                    </div>
-                </form>
+                        <span class="forgot-link" id="goToForgotLink">¿Olvidaste tu contraseña?</span>
+                        <button type="submit" class="submit-btn">Ingresar</button>
+                    </form>
 
-                <!-- FORMULARIO CREAR CUENTA -->
-                <form id="registerForm" class="hidden">
-                    <div class="form-group"><label>Nombre</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regNombre" class="form-control" required></div></div>
-                    <div class="form-group"><label>Apellido</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regApellido" class="form-control" required></div></div>
-                    <div class="form-group"><label>Correo Electrónico</label><div class="input-wrapper"><i class="fa-solid fa-envelope input-icon"></i><input type="email" id="regEmail" class="form-control" required></div></div>
-                    <div class="form-group"><label>Fecha de Nacimiento</label><div class="input-wrapper"><i class="fa-solid fa-calendar input-icon"></i><input type="date" id="regFecha" class="form-control" required></div></div>
-                    
-                    <div class="form-group">
-                        <label>Contraseña</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="regPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
-                            <button type="button" class="toggle-password" data-target="regPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
+                    <!-- FORMULARIO RECUPERAR ACCESO -->
+                    <form id="forgotForm" class="hidden">
+                        <h3 style="margin-bottom: 15px; font-size: 18px;">Recuperar Acceso</h3>
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Ingresa tu correo para enviarte un código de reinicio temporal.</p>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-envelope input-icon"></i>
+                                <input type="email" id="forgotEmail" class="form-control" placeholder="nombre@ejemplo.com" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Confirmar Contraseña</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="regConfirmPassword" class="form-control" placeholder="Repite la contraseña" required>
-                            <button type="button" class="toggle-password" data-target="regConfirmPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="submit-btn">Registrarse</button>
-                </form>
+                        <button type="submit" class="submit-btn">Enviar Código</button>
+                        <span class="forgot-link go-back-login" style="text-align: center; margin-top: 20px; display: block;">Volver al Login</span>
+                    </form>
 
-                <!-- FORMULARIO VERIFICACIÓN -->
-                <form id="verifyForm" class="hidden">
-                    <h3 style="margin-bottom: 15px; font-size: 18px;">Verificación de Cuenta</h3>
-                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Introduce el token de seguridad enviado a tu buzón de correo electrónico.</p>
-                    <div class="form-group">
-                        <label>Código de 6 dígitos</label>
-                        <div class="input-wrapper">
-                            <i class="fa-solid fa-key input-icon"></i>
-                            <input type="text" id="verifyCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
+                    <!-- FORMULARIO RESTABLECER CONTRASEÑA -->
+                    <form id="resetPasswordForm" class="hidden">
+                        <h3 style="margin-bottom: 15px; font-size: 18px;">Restablecer Contraseña</h3>
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Revisa tu correo e introduce el código junto a tu nueva clave.</p>
+                        
+                        <div class="form-group">
+                            <label>Código de Verificación</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-key input-icon"></i>
+                                <input type="text" id="resetCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
+                            </div>
                         </div>
-                    </div>
-                    <button type="submit" class="submit-btn">Confirmar Cuenta</button>
-                    <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px;">
-                        <span id="btnResendCode" class="forgot-link" style="margin: 0; cursor: pointer;">Reenviar código</span>
-                        <span class="forgot-link go-back-login" style="margin: 0; cursor: pointer;">Volver al Login</span>
-                    </div>
-                </form>
+                        <div class="form-group">
+                            <label>Nueva Contraseña</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="resetNewPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
+                                <button type="button" class="toggle-password" data-target="resetNewPassword">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirmar Nueva Contraseña</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="resetConfirmPassword" class="form-control" placeholder="Repite la contraseña" required>
+                                <button type="button" class="toggle-password" data-target="resetConfirmPassword">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Actualizar Contraseña</button>
+                        <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px;">
+                            <span id="btnResendResetCode" class="forgot-link" style="margin: 0; cursor: pointer;">Reenviar código</span>
+                            <span class="forgot-link go-back-login" style="margin: 0; cursor: pointer;">Volver al Login</span>
+                        </div>
+                    </form>
+
+                    <!-- FORMULARIO CREAR CUENTA -->
+                    <form id="registerForm" class="hidden">
+                        <div class="form-group"><label>Nombre</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regNombre" class="form-control" required></div></div>
+                        <div class="form-group"><label>Apellido</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regApellido" class="form-control" required></div></div>
+                        <div class="form-group"><label>Correo Electrónico</label><div class="input-wrapper"><i class="fa-solid fa-envelope input-icon"></i><input type="email" id="regEmail" class="form-control" required></div></div>
+                        <div class="form-group"><label>Fecha de Nacimiento</label><div class="input-wrapper"><i class="fa-solid fa-calendar input-icon"></i><input type="date" id="regFecha" class="form-control" required></div></div>
+                        
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="regPassword" class="form-control" placeholder="Mínimo 6 caracteres" required>
+                                <button type="button" class="toggle-password" data-target="regPassword">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirmar Contraseña</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="regConfirmPassword" class="form-control" placeholder="Repite la contraseña" required>
+                                <button type="button" class="toggle-password" data-target="regConfirmPassword">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Registrarse</button>
+                    </form>
+
+                    <!-- FORMULARIO VERIFICACIÓN -->
+                    <form id="verifyForm" class="hidden">
+                        <h3 style="margin-bottom: 15px; font-size: 18px;">Verificación de Cuenta</h3>
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Introduce el token de seguridad enviado a tu buzón de correo electrónico.</p>
+                        <div class="form-group">
+                            <label>Código de 6 dígitos</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-key input-icon"></i>
+                                <input type="text" id="verifyCode" class="form-control" placeholder="123456" maxlength="6" style="text-align: center; font-weight: bold; letter-spacing: 2px;" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Confirmar Cuenta</button>
+                        <div style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px;">
+                            <span id="btnResendCode" class="forgot-link" style="margin: 0; cursor: pointer;">Reenviar código</span>
+                            <span class="forgot-link go-back-login" style="margin: 0; cursor: pointer;">Volver al Login</span>
+                        </div>
+                    </form>
+                </div> <!-- FIN CONTENEDOR DE FORMULARIOS -->
+
             </div>
         </div>
     </div>
