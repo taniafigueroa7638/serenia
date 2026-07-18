@@ -1,6 +1,8 @@
 const API_URL = window.location.origin;
 let usuarioActual = null;
-let emailEnVerificacion = '';
+
+// Recuperamos el correo de la sesión por si la página se recarga a mitad del proceso
+let emailEnVerificacion = sessionStorage.getItem('emailEnVerificacion') || '';
 
 document.addEventListener("DOMContentLoaded", () => {
     // === VALIDACIÓN DE SESIÓN AUTOMÁTICA AL CARGAR ===
@@ -55,6 +57,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+
+// Función auxiliar para actualizar el email de forma segura en memoria y almacenamiento
+function actualizarEmailVerificacion(email) {
+    emailEnVerificacion = email;
+    if (email) {
+        sessionStorage.setItem('emailEnVerificacion', email);
+    } else {
+        sessionStorage.removeItem('emailEnVerificacion');
+    }
+}
 
 async function verificarSesionActiva() {
     const token = localStorage.getItem('token');
@@ -146,12 +158,11 @@ async function handleLogin(e) {
         if (response.ok) {
             localStorage.setItem('token', data.token);
             usuarioActual = data.usuario;
+            actualizarEmailVerificacion(''); // Limpiamos el correo temporal al entrar con éxito
             cargarDashboard();
         } else {
-            // DETECCIÓN DE CUENTA EXISTENTE PERO NO VERIFICADA:
-            // Tu backend responde "Usuario no encontrado o no verificado." ante cuentas inactivas.
             if (data.mensaje && data.mensaje.toLowerCase().includes('verificado')) {
-                emailEnVerificacion = email; // Capturamos el correo usado para los reenvíos
+                actualizarEmailVerificacion(email); 
                 switchTab('verify');
                 showNotification('Tu cuenta existe pero aún no está verificada. Por favor introduce tu código de activación.', 'error');
             } else {
@@ -163,7 +174,6 @@ async function handleLogin(e) {
     }
 }
 
-// Reenviar código de activación de cuenta (Usando la pasarela del forgot-password)
 async function handleResendCode() {
     clearNotification();
     if (!emailEnVerificacion) {
@@ -187,7 +197,6 @@ async function handleResendCode() {
     }
 }
 
-// Reenviar código del formulario de Restablecer contraseña
 async function handleResendResetCode() {
     clearNotification();
     if (!emailEnVerificacion) {
@@ -254,12 +263,13 @@ async function saveProfile() {
             usuarioActual = data.usuario;
             cargarDashboard();
             document.getElementById('profileDropdown').classList.add('hidden');
-            alert('¡Perfil actualizado con éxito!');
+            // Cambiado alert por tu sistema de notificaciones globales
+            showNotification('¡Perfil actualizado con éxito!', 'success');
         } else {
-            alert(data.mensaje || 'Error al actualizar.');
+            showNotification(data.mensaje || 'Error al actualizar el perfil.', 'error');
         }
     } catch (e) {
-        alert('Error de conexión al guardar el perfil.');
+        showNotification('Error de conexión al guardar el perfil.', 'error');
     }
 }
 
@@ -275,7 +285,7 @@ async function handleForgot(e) {
         });
         const data = await res.json();
         if (res.ok) {
-            emailEnVerificacion = email;
+            actualizarEmailVerificacion(email);
             switchTab('reset');
             showNotification(data.mensaje, 'success');
         } else {
@@ -301,6 +311,7 @@ async function handleResetReal(e) {
         const data = await res.json();
 
         if (res.ok) {
+            actualizarEmailVerificacion(''); // Limpiamos el flujo completado
             switchTab('login');
             showNotification(data.mensaje, 'success');
         } else {
@@ -329,7 +340,7 @@ async function handleRegister(e) {
         const data = await res.json();
 
         if (res.ok) {
-            emailEnVerificacion = email;
+            actualizarEmailVerificacion(email);
             switchTab('verify'); 
             showNotification(data.mensaje, 'success');
         } else {
@@ -352,6 +363,7 @@ async function handleVerify(e) {
         });
         const data = await res.json();
         if (res.ok) {
+            actualizarEmailVerificacion(''); // Limpiamos el flujo completado
             switchTab('login');
             showNotification(data.mensaje, 'success');
         } else {
@@ -374,6 +386,7 @@ document.addEventListener('click', () => {
 
 function logout() {
     localStorage.removeItem('token');
+    actualizarEmailVerificacion('');
     document.getElementById('dashboardScreen').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
     switchTab('login');
