@@ -4,18 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serenia</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            /* Nueva paleta de colores claros */
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
             --text-main: #111827;
             --text-muted: #6b7280;
-            --accent-primary: #ef4444; 
-            --accent-hover: #dc2626;
+            --accent-primary: #2563eb; 
+            --accent-hover: #1d4ed8;
+            
             --border-color: #e5e7eb;
             --input-bg: #f9fafb;
             --success: #10b981;
@@ -48,12 +49,6 @@
         .custom-alert { padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; line-height: 1.4; }
         .custom-alert.alert-error { background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; }
         .custom-alert.alert-success { background-color: #d1fae5; border: 1px solid #a7f3d0; color: #065f46; }
-
-        /* BOTONES OAUTH */
-        .oauth-buttons-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
-        .oauth-btn { width: 100%; border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 99px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; }
-        .btn-google { background-color: #ffffff; color: #000; }
-        .btn-facebook { background-color: #1877f2; color: white; border: none; }
         
         .divider { display: flex; align-items: center; text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
         .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-color); }
@@ -69,8 +64,11 @@
         .form-control:focus { border-color: var(--accent-primary); background-color: #ffffff; }
         
         .toggle-password { position: absolute; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; z-index: 5; }
-        .submit-btn { width: 100%; background-color: var(--accent-primary); color: white; border: none; padding: 14px; border-radius: 99px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        
+        /* ESTILOS DE LOS BOTONES MEJORADOS CON ANIMACIÓN COMPACTA */
+        .submit-btn { width: 100%; background-color: var(--accent-primary); color: white; border: none; padding: 14px; border-radius: 99px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: background-color 0.2s ease, transform 0.1s ease; }
         .submit-btn:hover { background-color: var(--accent-hover); }
+        .submit-btn:active { transform: scale(0.98); }
 
         .forgot-link { display: block; text-align: right; font-size: 13px; color: var(--text-muted); margin-top: -10px; margin-bottom: 20px; text-decoration: none; cursor: pointer; }
         .forgot-link:hover { color: var(--accent-primary); }
@@ -121,15 +119,6 @@
                     <button class="tab-btn" id="tabRegisterBtn">Crear Cuenta</button>
                 </div>
 
-                <div class="oauth-buttons-container" id="oauthContainer">
-                    <button type="button" class="oauth-btn btn-google" onclick="alert('Google disponible próximamente.')">
-                        <i class="fa-brands fa-google"></i> Continuar con Google
-                    </button>
-                    <button type="button" class="oauth-btn btn-facebook" onclick="alert('Facebook disponible próximamente.')">
-                        <i class="fa-brands fa-facebook-f"></i> Continuar con Facebook
-                    </button>
-                </div>
-
                 <div class="divider" id="dividerText">o con tu correo</div>
 
                 <!-- FORMULARIO LOGIN -->
@@ -170,7 +159,7 @@
                     <span class="forgot-link go-back-login" style="text-align: center; margin-top: 20px; display: block;">Volver al Login</span>
                 </form>
 
-                <!-- FORMULARIO RESTABLECER CONTRASEÑA (DOBLE CAMPO APLICADO) -->
+                <!-- FORMULARIO RESTABLECER CONTRASEÑA -->
                 <form id="resetPasswordForm" class="hidden">
                     <h3 style="margin-bottom: 15px; font-size: 18px;">Restablecer Contraseña</h3>
                     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Revisa tu correo e introduce el código junto a tu nueva clave.</p>
@@ -210,7 +199,7 @@
                     </div>
                 </form>
 
-                <!-- FORMULARIO CREAR CUENTA (DOBLE CAMPO APLICADO) -->
+                <!-- FORMULARIO CREAR CUENTA -->
                 <form id="registerForm" class="hidden">
                     <div class="form-group"><label>Nombre</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regNombre" class="form-control" required></div></div>
                     <div class="form-group"><label>Apellido</label><div class="input-wrapper"><i class="fa-solid fa-user input-icon"></i><input type="text" id="regApellido" class="form-control" required></div></div>
@@ -241,7 +230,7 @@
                     <button type="submit" class="submit-btn">Registrarse</button>
                 </form>
 
-                <!-- FORMULARIO VERIFICACIÓN (Solucionado para que use Flex/Block idéntico en PC y móvil) -->
+                <!-- FORMULARIO VERIFICACIÓN -->
                 <form id="verifyForm" class="hidden">
                     <h3 style="margin-bottom: 15px; font-size: 18px;">Verificación de Cuenta</h3>
                     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Introduce el token de seguridad enviado a tu buzón de correo electrónico.</p>
@@ -272,7 +261,7 @@
             
             <div class="user-profile-menu" id="userMenuBtn">
                 <span id="navUserName">Usuario</span>
-                <img id="navAvatar" src="" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=ef4444&color=fff';">
+                <img id="navAvatar" src="" class="user-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=2563eb&color=fff';">
                 
                 <div class="dropdown-profile hidden" id="profileDropdown">
                     <h4 style="margin-bottom: 15px; font-size: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Editar Mi Perfil</h4>
