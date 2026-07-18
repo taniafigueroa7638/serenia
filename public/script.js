@@ -110,9 +110,14 @@ function switchTab(type) {
     document.getElementById('forgotForm').classList.add('hidden');
     document.getElementById('resetPasswordForm').classList.add('hidden');
     
-    document.getElementById('authTabs').classList.remove('hidden');
-    document.getElementById('oauthContainer').classList.remove('hidden');
-    document.getElementById('dividerText').classList.remove('hidden');
+    // CORRECCIÓN: Se añaden condicionales "if" para evitar romper el flujo si estos elementos ya no existen
+    const authTabs = document.getElementById('authTabs');
+    const oauthContainer = document.getElementById('oauthContainer');
+    const dividerText = document.getElementById('dividerText');
+
+    if (authTabs) authTabs.classList.remove('hidden');
+    if (oauthContainer) oauthContainer.classList.remove('hidden');
+    if (dividerText) dividerText.classList.remove('hidden');
 
     const tabs = document.querySelectorAll('.tab-btn');
     tabs.forEach(t => t.classList.remove('active'));
@@ -124,19 +129,20 @@ function switchTab(type) {
         document.getElementById('tabRegisterBtn').classList.add('active');
         document.getElementById('registerForm').classList.remove('hidden');
     } else if (type === 'forgot') {
-        document.getElementById('authTabs').classList.add('hidden');
-        document.getElementById('oauthContainer').classList.add('hidden');
-        document.getElementById('dividerText').classList.add('hidden');
+        if (authTabs) authTabs.classList.add('hidden');
+        if (oauthContainer) oauthContainer.classList.add('hidden');
+        if (dividerText) dividerText.classList.add('hidden');
         document.getElementById('forgotForm').classList.remove('hidden');
     } else if (type === 'reset') {
-        document.getElementById('authTabs').classList.add('hidden');
-        document.getElementById('oauthContainer').classList.add('hidden');
-        document.getElementById('dividerText').classList.add('hidden');
+        if (authTabs) authTabs.hidden = true; // O usando classList.add('hidden')
+        if (authTabs) authTabs.classList.add('hidden');
+        if (oauthContainer) oauthContainer.classList.add('hidden');
+        if (dividerText) dividerText.classList.add('hidden');
         document.getElementById('resetPasswordForm').classList.remove('hidden');
     } else if (type === 'verify') {
-        document.getElementById('authTabs').classList.add('hidden');
-        document.getElementById('oauthContainer').classList.add('hidden');
-        document.getElementById('dividerText').classList.add('hidden');
+        if (authTabs) authTabs.classList.add('hidden');
+        if (oauthContainer) oauthContainer.classList.add('hidden');
+        if (dividerText) dividerText.classList.add('hidden');
         document.getElementById('verifyForm').classList.remove('hidden');
     }
 }
@@ -158,7 +164,7 @@ async function handleLogin(e) {
         if (response.ok) {
             localStorage.setItem('token', data.token);
             usuarioActual = data.usuario;
-            actualizarEmailVerificacion(''); // Limpiamos el correo temporal al entrar con éxito
+            actualizarEmailVerificacion(''); 
             cargarDashboard();
         } else {
             if (data.mensaje && data.mensaje.toLowerCase().includes('verificado')) {
@@ -263,7 +269,6 @@ async function saveProfile() {
             usuarioActual = data.usuario;
             cargarDashboard();
             document.getElementById('profileDropdown').classList.add('hidden');
-            // Cambiado alert por tu sistema de notificaciones globales
             showNotification('¡Perfil actualizado con éxito!', 'success');
         } else {
             showNotification(data.mensaje || 'Error al actualizar el perfil.', 'error');
@@ -311,7 +316,7 @@ async function handleResetReal(e) {
         const data = await res.json();
 
         if (res.ok) {
-            actualizarEmailVerificacion(''); // Limpiamos el flujo completado
+            actualizarEmailVerificacion(''); 
             switchTab('login');
             showNotification(data.mensaje, 'success');
         } else {
@@ -363,7 +368,7 @@ async function handleVerify(e) {
         });
         const data = await res.json();
         if (res.ok) {
-            actualizarEmailVerificacion(''); // Limpiamos el flujo completado
+            actualizarEmailVerificacion(''); 
             switchTab('login');
             showNotification(data.mensaje, 'success');
         } else {
