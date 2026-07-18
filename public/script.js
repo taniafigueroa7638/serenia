@@ -134,7 +134,6 @@ function switchTab(type) {
         if (dividerText) dividerText.classList.add('hidden');
         document.getElementById('forgotForm').classList.remove('hidden');
     } else if (type === 'reset') {
-        if (authTabs) authTabs.hidden = true; // O usando classList.add('hidden')
         if (authTabs) authTabs.classList.add('hidden');
         if (oauthContainer) oauthContainer.classList.add('hidden');
         if (dividerText) dividerText.classList.add('hidden');
@@ -306,6 +305,14 @@ async function handleResetReal(e) {
     clearNotification();
     const codigo = document.getElementById('resetCode').value;
     const nuevaPassword = document.getElementById('resetNewPassword').value;
+    const confirmarPassword = document.getElementById('resetConfirmPassword').value;
+
+    // VALIDACIÓN: Verificar contraseñas al restablecer acceso
+    if (nuevaPassword !== confirmarPassword) {
+        showNotification('Las nuevas contraseñas no coinciden. Por favor, verifícalas.', 'error');
+        document.getElementById('resetConfirmPassword').focus();
+        return;
+    }
 
     try {
         const res = await fetch(`${API_URL}/api/auth/reset-password`, {
@@ -335,6 +342,14 @@ async function handleRegister(e) {
     const email = document.getElementById('regEmail').value;
     const fecha_nacimiento = document.getElementById('regFecha').value;
     const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+    // VALIDACIÓN: Verificar contraseñas al crear cuenta nueva
+    if (password !== confirmPassword) {
+        showNotification('Las contraseñas no coinciden. Por favor, verifícalas.', 'error');
+        document.getElementById('regConfirmPassword').focus();
+        return;
+    }
 
     try {
         const res = await fetch(`${API_URL}/api/auth/register`, {
