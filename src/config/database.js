@@ -1,12 +1,10 @@
 const { Pool } = require('pg');
 
 // Parsear DATABASE_URL para quitar sslmode del query string
-// y controlar SSL manualmente (necesario para Aiven)
 let connectionConfig;
 
 if (process.env.DATABASE_URL) {
   const dbUrl = new URL(process.env.DATABASE_URL);
-  // Eliminar sslmode del query string para que pg no lo sobreescriba
   dbUrl.searchParams.delete('sslmode');
 
   connectionConfig = {
@@ -19,7 +17,6 @@ if (process.env.DATABASE_URL) {
     connectionTimeoutMillis: 5000,
   };
 } else {
-  // Fallback para desarrollo local
   connectionConfig = {
     host: process.env.PG_HOST || 'localhost',
     port: process.env.PG_PORT || 5432,

@@ -3,7 +3,7 @@ function renderLogin() {
     <div class="auth-container">
       <div class="auth-box glass">
         <div style="text-align:center;margin-bottom:24px;">
-          <div style="font-size:48px;margin-bottom:12px;">🧘</div>
+          <img src="/assets/logo.jpg" alt="Serenia" class="login-logo">
           <h1>Bienvenido a Serenia</h1>
           <p class="subtitle">Inicia sesión para continuar tu camino al bienestar</p>
         </div>
@@ -51,7 +51,7 @@ function renderRegister() {
     <div class="auth-container">
       <div class="auth-box glass">
         <div style="text-align:center;margin-bottom:24px;">
-          <div style="font-size:48px;margin-bottom:12px;">🌿</div>
+          <img src="/assets/logo.jpg" alt="Serenia" class="login-logo">
           <h1>Crear cuenta</h1>
           <p class="subtitle">Comienza tu viaje hacia el equilibrio emocional</p>
         </div>
@@ -137,7 +137,7 @@ function renderVerify() {
     <div class="auth-container">
       <div class="auth-box glass">
         <div style="text-align:center;">
-          <div style="font-size:48px;margin-bottom:12px;">📧</div>
+          <img src="/assets/logo.jpg" alt="Serenia" class="login-logo" style="width:80px;height:80px;">
           <h1>Verifica tu email</h1>
           <p class="subtitle">Ingresa el código de 6 dígitos enviado a<br><strong>${email}</strong></p>
           <div class="code-inputs" id="codeInputs">
@@ -199,6 +199,9 @@ function renderForgot() {
   document.getElementById('app').innerHTML = `
     <div class="auth-container">
       <div class="auth-box glass">
+        <div style="text-align:center;margin-bottom:24px;">
+          <img src="/assets/logo.jpg" alt="Serenia" class="login-logo" style="width:80px;height:80px;">
+        </div>
         <h1>Recuperar contraseña</h1>
         <p class="subtitle">Ingresa tu email y te enviaremos un enlace</p>
         <form id="forgotForm">
@@ -235,6 +238,9 @@ function renderReset() {
   document.getElementById('app').innerHTML = `
     <div class="auth-container">
       <div class="auth-box glass">
+        <div style="text-align:center;margin-bottom:24px;">
+          <img src="/assets/logo.jpg" alt="Serenia" class="login-logo" style="width:80px;height:80px;">
+        </div>
         <h1>Nueva contraseña</h1>
         <form id="resetForm">
           <div class="form-group">

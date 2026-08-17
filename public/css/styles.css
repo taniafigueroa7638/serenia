@@ -544,3 +544,21 @@ body {
   .nav-links { gap: 12px; }
   .nav-links a, .nav-links button { padding: 6px 10px; font-size: 13px; }
 }
+
+/* Login Logo */
+.login-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(126, 87, 194, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+  .login-logo {
+    width: 90px;
+    height: 90px;
+  }
+}

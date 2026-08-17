@@ -6,31 +6,43 @@
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 const sendEmail = async ({ to, subject, htmlContent, textContent }) => {
-  const response = await fetch(BREVO_API_URL, {
-    method: 'POST',
-    headers: {
-      'accept': 'application/json',
-      'api-key': process.env.BREVO_API_KEY,
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({
-      sender: {
-        name: process.env.BREVO_SENDER_NAME || 'Serenia',
-        email: process.env.BREVO_SENDER_EMAIL
-      },
-      to: [{ email: to }],
-      subject,
-      htmlContent,
-      textContent
-    })
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Brevo API Error: ${JSON.stringify(error)}`);
+  // Validar que existe API key
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error('BREVO_API_KEY no está configurada. Agrega la variable de entorno en Render.');
   }
 
-  return await response.json();
+  try {
+    const response = await fetch(BREVO_API_URL, {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: {
+          name: process.env.BREVO_SENDER_NAME || 'Serenia',
+          email: process.env.BREVO_SENDER_EMAIL
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent,
+        textContent
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Brevo API error response:', errorData);
+      throw new Error(`Brevo API error: ${errorData.message || response.statusText || 'Error desconocido'}`);
+    }
+
+    return await response.json();
+  } catch (err) {
+    if (err.message.includes('BREVO_API_KEY')) throw err;
+    console.error('Error enviando email:', err);
+    throw new Error('No se pudo enviar el email. Verifica tu conexión y la API key de Brevo.');
+  }
 };
 
 const generateCode = () => {
@@ -38,6 +50,13 @@ const generateCode = () => {
 };
 
 const sendVerificationCode = async (email, code, nombre) => {
+  // Fallback de desarrollo: si no hay API key, solo loguea
+  if (!process.env.BREVO_API_KEY) {
+    console.log('⚠️  MODO DESARROLLO: No se enviará email real.');
+    console.log(`📧 Email: ${email} | Código: ${code}`);
+    return { messageId: 'dev-mode', code };
+  }
+
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background: linear-gradient(135deg, #f5f0ff 0%, #e8f5e9 100%); border-radius: 16px;">
       <div style="text-align: center; margin-bottom: 30px;">
@@ -65,6 +84,12 @@ const sendVerificationCode = async (email, code, nombre) => {
 };
 
 const sendPasswordReset = async (email, token, nombre) => {
+  if (!process.env.BREVO_API_KEY) {
+    console.log('⚠️  MODO DESARROLLO: No se enviará email real.');
+    console.log(`📧 Email: ${email} | Token: ${token}`);
+    return { messageId: 'dev-mode' };
+  }
+
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password.html?token=${token}`;
 
   const html = `
