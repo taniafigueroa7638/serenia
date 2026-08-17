@@ -33,8 +33,8 @@ const loginValidation = [
 ];
 
 const questionnaireValidation = [
-  body('respuestas').isArray({ min: 10, max: 10 }).withMessage('Debe responder las 10 preguntas'),
-  body('respuestas.*.pregunta').isInt({ min: 1, max: 10 }),
+  body('respuestas').isArray({ min: 17, max: 17 }).withMessage('Debe responder las 17 preguntas'),
+  body('respuestas.*.pregunta').isInt({ min: 1, max: 17 }),
   body('respuestas.*.valor').isInt({ min: 0, max: 4 }),
 ];
 

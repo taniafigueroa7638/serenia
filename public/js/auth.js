@@ -16,9 +16,7 @@ function renderLogin() {
             <label>Contraseña</label>
             <div class="password-wrapper">
               <input type="password" name="password" id="loginPassword" required placeholder="••••••••">
-              <button type="button" class="toggle-password" data-toggle="loginPassword" title="Mostrar/Ocultar">
-                👁️
-              </button>
+              <button type="button" class="toggle-password" data-toggle="loginPassword" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button>
             </div>
           </div>
           <div id="loginError"></div>
@@ -31,8 +29,6 @@ function renderLogin() {
       </div>
     </div>
   `;
-  bindNavigation();
-  bindPasswordToggles();
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -82,9 +78,7 @@ function renderRegister() {
             <div class="password-wrapper">
               <input type="password" name="password" id="regPassword" required minlength="8"
                 placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número">
-              <button type="button" class="toggle-password" data-toggle="regPassword" title="Mostrar/Ocultar">
-                👁️
-              </button>
+              <button type="button" class="toggle-password" data-toggle="regPassword" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button>
             </div>
           </div>
           <div class="form-group">
@@ -116,8 +110,6 @@ function renderRegister() {
       </div>
     </div>
   `;
-  bindNavigation();
-  bindPasswordToggles();
 
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -235,7 +227,6 @@ function renderForgot() {
       </div>
     </div>
   `;
-  bindNavigation();
 
   document.getElementById('forgotForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -265,9 +256,7 @@ function renderReset() {
             <label>Nueva contraseña</label>
             <div class="password-wrapper">
               <input type="password" name="password" id="resetPassword" required minlength="8">
-              <button type="button" class="toggle-password" data-toggle="resetPassword" title="Mostrar/Ocultar">
-                👁️
-              </button>
+              <button type="button" class="toggle-password" data-toggle="resetPassword" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button>
             </div>
           </div>
           <div id="resetMessage"></div>
@@ -276,47 +265,18 @@ function renderReset() {
       </div>
     </div>
   `;
-  bindPasswordToggles();
-
   document.getElementById('resetForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = new FormData(e.target).get('password');
     try {
       await api('/auth/reset-password', { method: 'POST', body: { token, newPassword: password } });
       document.getElementById('resetMessage').innerHTML = `<div class="alert alert-success">✅ Contraseña actualizada. <button class="link-btn" data-navigate="/login">Iniciar sesión</button></div>`;
-      bindNavigation();
     } catch (err) {
       document.getElementById('resetMessage').innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
     }
   });
 }
 
-// Helper: bind navigation buttons (data-navigate)
-function bindNavigation() {
-  document.querySelectorAll('[data-navigate]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      goTo(btn.dataset.navigate);
-    });
-  });
-}
-
-// Helper: bind password toggle buttons (data-toggle)
-function bindPasswordToggles() {
-  document.querySelectorAll('[data-toggle]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const inputId = btn.dataset.toggle;
-      const input = document.getElementById(inputId);
-      if (input.type === 'password') {
-        input.type = 'text';
-        btn.textContent = '🙈';
-        btn.title = 'Ocultar';
-      } else {
-        input.type = 'password';
-        btn.textContent = '👁️';
-        btn.title = 'Mostrar';
-      }
-    });
-  });
-}
+// Nota: la navegación [data-navigate] y el toggle de contraseña [data-toggle]
+// se registran de forma global y única en app.js (bindAllEvents), evitando dobles
+// bindings que antes cancelaban el efecto de mostrar/ocultar la contraseña.

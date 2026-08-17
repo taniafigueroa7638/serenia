@@ -86,8 +86,8 @@ async function renderHistory() {
                 ${cuestionarios.map(q => `
                   <tr data-qid="${q.id}" style="cursor:pointer;">
                     <td>${new Date(q.created_at).toLocaleDateString('es-ES')}</td>
-                    <td>${q.estres_score}/16</td>
-                    <td>${q.ansiedad_score}/16</td>
+                    <td>${q.estres_score}/40</td>
+                    <td>${q.ansiedad_score}/21</td>
                     <td>${q.emocion_principal}</td>
                     <td>
                       <span class="badge ${q.resultado_general === 'Nivel saludable' ? 'badge-low' : q.resultado_general.includes('moderado') ? 'badge-moderate' : 'badge-high'}">

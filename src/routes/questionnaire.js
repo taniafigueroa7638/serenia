@@ -33,16 +33,7 @@ router.post('/', authenticate, validate(questionnaireValidation), async (req, re
       const pregunta = PREGUNTAS.find(p => p.num === r.pregunta);
       if (!pregunta) continue;
 
-      let respuestaTexto;
-      if (pregunta.num === 3) {
-        respuestaTexto = ESCALAS.capacidad[r.valor];
-      } else if (pregunta.num === 9) {
-        respuestaTexto = ESCALAS.emocional[r.valor];
-      } else if (pregunta.num === 10) {
-        respuestaTexto = ESCALAS.emociones[r.valor] || 'No especificada';
-      } else {
-        respuestaTexto = ESCALAS.frecuencia[r.valor];
-      }
+      const respuestaTexto = ESCALAS[pregunta.categoria]?.[r.valor] || 'No especificada';
 
       await query(`
         INSERT INTO answers (questionnaire_id, pregunta_numero, pregunta_texto, respuesta, valor_numerico, categoria)

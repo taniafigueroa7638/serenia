@@ -576,21 +576,36 @@ body {
 
 .toggle-password {
   position: absolute;
-  right: 12px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   background: none;
   border: none;
-  font-size: 20px;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 4px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  padding: 0;
+  color: var(--text-light);
+  transition: var(--transition);
   z-index: 2;
 }
 
 .toggle-password:hover {
-  opacity: 1;
+  color: var(--primary);
+  background: rgba(126, 87, 194, 0.08);
+}
+
+.toggle-password:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 1px;
+}
+
+.toggle-password svg {
+  display: block;
 }
 
 /* Link buttons (replace <a> tags) */
