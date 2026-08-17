@@ -32,12 +32,12 @@ async function renderDashboard() {
         <div class="glass" style="padding:32px;border-radius:var(--radius);text-align:center;">
           <h2 style="margin-bottom:16px;color:var(--primary-dark);">¿Cómo te sientes hoy?</h2>
           <p style="color:var(--text-light);margin-bottom:24px;">Realiza un nuevo cuestionario para evaluar tu estado emocional actual.</p>
-          <button class="btn btn-primary" style="max-width:300px;margin:0 auto;" onclick="goTo('/questionnaire')">
+          <button class="btn btn-primary" style="max-width:300px;margin:0 auto;" data-navigate="/questionnaire">
             📝 Realizar cuestionario
           </button>
         </div>
       </div>
-      <button class="fab" onclick="goTo('/questionnaire')" title="Nuevo cuestionario">+</button>
+      <button class="fab" data-navigate="/questionnaire" title="Nuevo cuestionario">+</button>
     `;
   } catch (err) {
     document.getElementById('app').innerHTML = `
@@ -68,11 +68,11 @@ async function renderHistory() {
             <div style="font-size:48px;margin-bottom:16px;">📝</div>
             <h3>Aún no tienes cuestionarios</h3>
             <p style="color:var(--text-light);margin:16px 0;">Realiza tu primer cuestionario para comenzar a hacer seguimiento.</p>
-            <button class="btn btn-primary" style="max-width:250px;margin:0 auto;" onclick="goTo('/questionnaire')">Comenzar</button>
+            <button class="btn btn-primary" style="max-width:250px;margin:0 auto;" data-navigate="/questionnaire">Comenzar</button>
           </div>
         ` : `
           <div class="glass" style="padding:24px;border-radius:var(--radius);overflow-x:auto;">
-            <table class="history-table">
+            <table class="history-table" id="historyTable">
               <thead>
                 <tr>
                   <th>Fecha</th>
@@ -84,7 +84,7 @@ async function renderHistory() {
               </thead>
               <tbody>
                 ${cuestionarios.map(q => `
-                  <tr style="cursor:pointer;" onclick="verDetalleCuestionario(${q.id})">
+                  <tr data-qid="${q.id}" style="cursor:pointer;">
                     <td>${new Date(q.created_at).toLocaleDateString('es-ES')}</td>
                     <td>${q.estres_score}/16</td>
                     <td>${q.ansiedad_score}/16</td>
@@ -102,6 +102,13 @@ async function renderHistory() {
         `}
       </div>
     `;
+
+    // Bind row clicks
+    document.querySelectorAll('#historyTable tbody tr').forEach(row => {
+      row.addEventListener('click', () => {
+        verDetalleCuestionario(parseInt(row.dataset.qid));
+      });
+    });
   } catch (err) {
     alert('Error: ' + err.message);
   }
@@ -142,7 +149,7 @@ async function verDetalleCuestionario(id) {
               <div style="font-size:14px;color:var(--text-light);">Respuesta: <strong>${a.respuesta}</strong></div>
             </div>
           `).join('')}
-          <button class="btn btn-secondary" style="margin-top:24px;" onclick="goTo('/history')">← Volver al historial</button>
+          <button class="btn btn-secondary" data-navigate="/history" style="margin-top:24px;">← Volver al historial</button>
         </div>
       </div>
     `;

@@ -65,28 +65,45 @@ function mostrarPregunta() {
       <div class="progress-bar">
         <div class="progress-fill" style="width: ${progreso}%"></div>
       </div>
-      <div class="question-card glass">
+      <div class="question-card glass" id="questionCard">
         <div class="question-number">Pregunta ${pregunta.num} de ${PREGUNTAS_DATA.length}</div>
         <div class="question-text">${pregunta.texto}</div>
-        <div class="options-grid">
+        <div class="options-grid" id="optionsGrid">
           ${opciones.map(opt => `
             <button class="option-btn ${respuestasActuales[pregunta.num] === opt.valor ? 'selected' : ''}"
-              onclick="seleccionarRespuesta(${pregunta.num}, ${opt.valor})">
+              data-pregunta="${pregunta.num}" data-valor="${opt.valor}">
               <span class="option-emoji">${opt.emoji}</span>
               <span>${opt.texto}</span>
             </button>
           `).join('')}
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:24px;">
-          ${preguntaActual > 0 ? `<button class="btn btn-secondary" style="width:auto;padding:12px 24px;" onclick="preguntaAnterior()">← Anterior</button>` : '<div></div>'}
+        <div style="display:flex;justify-content:space-between;margin-top:24px;" id="navButtons">
+          ${preguntaActual > 0 ? `<button class="btn btn-secondary" id="btnPrev" style="width:auto;padding:12px 24px;">← Anterior</button>` : '<div></div>'}
           ${respuestasActuales[pregunta.num] !== undefined ?
-            `<button class="btn btn-primary" style="width:auto;padding:12px 24px;" onclick="siguientePregunta()">
+            `<button class="btn btn-primary" id="btnNext" style="width:auto;padding:12px 24px;">
               ${preguntaActual === PREGUNTAS_DATA.length - 1 ? 'Finalizar →' : 'Siguiente →'}
-            </button>` : ''}
+            </button>` : '<div></div>'}
         </div>
       </div>
     </div>
   `;
+
+  // Bind option buttons
+  document.querySelectorAll('#optionsGrid .option-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const num = parseInt(btn.dataset.pregunta);
+      const valor = parseInt(btn.dataset.valor);
+      seleccionarRespuesta(num, valor);
+    });
+  });
+
+  // Bind prev button
+  const btnPrev = document.getElementById('btnPrev');
+  if (btnPrev) btnPrev.addEventListener('click', preguntaAnterior);
+
+  // Bind next button
+  const btnNext = document.getElementById('btnNext');
+  if (btnNext) btnNext.addEventListener('click', siguientePregunta);
 }
 
 function seleccionarRespuesta(num, valor) {
@@ -175,8 +192,8 @@ function renderResults(scores) {
           </div>
         </div>
         <div style="display:flex;gap:12px;">
-          <button class="btn btn-primary" onclick="goTo('/dashboard')">Volver al inicio</button>
-          <button class="btn btn-secondary" onclick="goTo('/history')">Ver historial</button>
+          <button class="btn btn-primary" data-navigate="/dashboard">Volver al inicio</button>
+          <button class="btn btn-secondary" data-navigate="/history">Ver historial</button>
         </div>
       </div>
     </div>

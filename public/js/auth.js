@@ -16,7 +16,7 @@ function renderLogin() {
             <label>Contraseña</label>
             <div class="password-wrapper">
               <input type="password" name="password" id="loginPassword" required placeholder="••••••••">
-              <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)" title="Mostrar/Ocultar">
+              <button type="button" class="toggle-password" data-toggle="loginPassword" title="Mostrar/Ocultar">
                 👁️
               </button>
             </div>
@@ -25,12 +25,14 @@ function renderLogin() {
           <button type="submit" class="btn btn-primary">Iniciar sesión</button>
         </form>
         <div class="auth-footer">
-          <p>¿No tienes cuenta? <button class="link-btn" onclick="goTo('/register')">Regístrate</button></p>
-          <p style="margin-top:8px;"><button class="link-btn" onclick="goTo('/forgot')">¿Olvidaste tu contraseña?</button></p>
+          <p>¿No tienes cuenta? <button class="link-btn" data-navigate="/register">Regístrate</button></p>
+          <p style="margin-top:8px;"><button class="link-btn" data-navigate="/forgot">¿Olvidaste tu contraseña?</button></p>
         </div>
       </div>
     </div>
   `;
+  bindNavigation();
+  bindPasswordToggles();
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -80,7 +82,7 @@ function renderRegister() {
             <div class="password-wrapper">
               <input type="password" name="password" id="regPassword" required minlength="8"
                 placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número">
-              <button type="button" class="toggle-password" onclick="togglePassword('regPassword', this)" title="Mostrar/Ocultar">
+              <button type="button" class="toggle-password" data-toggle="regPassword" title="Mostrar/Ocultar">
                 👁️
               </button>
             </div>
@@ -109,11 +111,13 @@ function renderRegister() {
           <button type="submit" class="btn btn-primary">Crear cuenta</button>
         </form>
         <div class="auth-footer">
-          <p>¿Ya tienes cuenta? <button class="link-btn" onclick="goTo('/login')">Inicia sesión</button></p>
+          <p>¿Ya tienes cuenta? <button class="link-btn" data-navigate="/login">Inicia sesión</button></p>
         </div>
       </div>
     </div>
   `;
+  bindNavigation();
+  bindPasswordToggles();
 
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -154,14 +158,17 @@ function renderVerify() {
             ${[0,1,2,3,4,5].map(i => `<input type="text" maxlength="1" data-index="${i}" class="code-digit">`).join('')}
           </div>
           <div id="verifyError"></div>
-          <button class="btn btn-primary" onclick="submitCode()">Verificar</button>
+          <button type="button" class="btn btn-primary" id="btnVerify">Verificar</button>
           <div class="auth-footer">
-            <p>¿No recibiste el código? <button class="link-btn" onclick="resendCode()">Reenviar</button></p>
+            <p>¿No recibiste el código? <button class="link-btn" id="btnResend">Reenviar</button></p>
           </div>
         </div>
       </div>
     </div>
   `;
+
+  document.getElementById('btnVerify').addEventListener('click', submitCode);
+  document.getElementById('btnResend').addEventListener('click', resendCode);
 
   const inputs = document.querySelectorAll('.code-digit');
   inputs.forEach((input, idx) => {
@@ -223,11 +230,12 @@ function renderForgot() {
           <button type="submit" class="btn btn-primary">Enviar enlace</button>
         </form>
         <div class="auth-footer">
-          <button class="link-btn" onclick="goTo('/login')">← Volver al login</button>
+          <button class="link-btn" data-navigate="/login">← Volver al login</button>
         </div>
       </div>
     </div>
   `;
+  bindNavigation();
 
   document.getElementById('forgotForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -257,7 +265,7 @@ function renderReset() {
             <label>Nueva contraseña</label>
             <div class="password-wrapper">
               <input type="password" name="password" id="resetPassword" required minlength="8">
-              <button type="button" class="toggle-password" onclick="togglePassword('resetPassword', this)" title="Mostrar/Ocultar">
+              <button type="button" class="toggle-password" data-toggle="resetPassword" title="Mostrar/Ocultar">
                 👁️
               </button>
             </div>
@@ -268,29 +276,47 @@ function renderReset() {
       </div>
     </div>
   `;
+  bindPasswordToggles();
 
   document.getElementById('resetForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = new FormData(e.target).get('password');
     try {
       await api('/auth/reset-password', { method: 'POST', body: { token, newPassword: password } });
-      document.getElementById('resetMessage').innerHTML = `<div class="alert alert-success">✅ Contraseña actualizada. <button class="link-btn" onclick="goTo('/login')">Iniciar sesión</button></div>`;
+      document.getElementById('resetMessage').innerHTML = `<div class="alert alert-success">✅ Contraseña actualizada. <button class="link-btn" data-navigate="/login">Iniciar sesión</button></div>`;
+      bindNavigation();
     } catch (err) {
       document.getElementById('resetMessage').innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
     }
   });
 }
 
-// Toggle password visibility
-function togglePassword(inputId, btn) {
-  const input = document.getElementById(inputId);
-  if (input.type === 'password') {
-    input.type = 'text';
-    btn.textContent = '🙈';
-    btn.title = 'Ocultar';
-  } else {
-    input.type = 'password';
-    btn.textContent = '👁️';
-    btn.title = 'Mostrar';
-  }
+// Helper: bind navigation buttons (data-navigate)
+function bindNavigation() {
+  document.querySelectorAll('[data-navigate]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      goTo(btn.dataset.navigate);
+    });
+  });
+}
+
+// Helper: bind password toggle buttons (data-toggle)
+function bindPasswordToggles() {
+  document.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const inputId = btn.dataset.toggle;
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+        btn.title = 'Ocultar';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+        btn.title = 'Mostrar';
+      }
+    });
+  });
 }

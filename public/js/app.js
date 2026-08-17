@@ -23,13 +23,11 @@ function requireAuth(fn) {
   fn();
 }
 
-// goTo: navegación robusta que funciona con botones
 function goTo(path) {
   window.history.pushState({}, '', path);
   router();
 }
 
-// navigate: alias para compatibilidad
 function navigate(path) {
   goTo(path);
 }
@@ -42,7 +40,6 @@ function router() {
 
 window.addEventListener('popstate', router);
 
-// API helper
 async function api(endpoint, options = {}) {
   const url = `${API_URL}/api${endpoint}`;
   const config = {
@@ -84,22 +81,67 @@ function renderNavbar() {
   if (!state.token) return '';
   return `
     <nav class="navbar">
-      <a href="/dashboard" class="logo" onclick="goTo('/dashboard'); return false;">
+      <a href="/dashboard" class="logo" data-navigate="/dashboard">
         <span style="font-size:28px;">🧘</span>
         <span>Serenia</span>
       </a>
       <div class="nav-links">
-        <a href="/dashboard" onclick="goTo('/dashboard'); return false;">Inicio</a>
-        <a href="/questionnaire" onclick="goTo('/questionnaire'); return false;">Cuestionario</a>
-        <a href="/history" onclick="goTo('/history'); return false;">Historial</a>
-        <a href="/profile" onclick="goTo('/profile'); return false;">Perfil</a>
-        <button onclick="logout()">Cerrar sesión</button>
+        <a href="/dashboard" data-navigate="/dashboard">Inicio</a>
+        <a href="/questionnaire" data-navigate="/questionnaire">Cuestionario</a>
+        <a href="/history" data-navigate="/history">Historial</a>
+        <a href="/profile" data-navigate="/profile">Perfil</a>
+        <button id="navLogout">Cerrar sesión</button>
       </div>
     </nav>
   `;
 }
 
+// Auto-bind events after DOM changes
+function bindAllEvents() {
+  // Navigation links [data-navigate]
+  document.querySelectorAll('[data-navigate]').forEach(el => {
+    if (el._bound) return;
+    el._bound = true;
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      goTo(el.dataset.navigate);
+    });
+  });
+
+  // Logout button
+  const logoutBtn = document.getElementById('navLogout');
+  if (logoutBtn && !logoutBtn._bound) {
+    logoutBtn._bound = true;
+    logoutBtn.addEventListener('click', logout);
+  }
+
+  // Password toggles [data-toggle]
+  document.querySelectorAll('[data-toggle]').forEach(btn => {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const inputId = btn.dataset.toggle;
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+        btn.title = 'Ocultar';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+        btn.title = 'Mostrar';
+      }
+    });
+  });
+}
+
+// Watch for DOM changes and auto-bind
+const observer = new MutationObserver(bindAllEvents);
+
 // Iniciar app
 document.addEventListener('DOMContentLoaded', () => {
+  observer.observe(document.getElementById('app'), { childList: true, subtree: true });
   router();
 });
