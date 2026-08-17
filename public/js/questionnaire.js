@@ -175,8 +175,8 @@ function renderResults(scores) {
           </div>
         </div>
         <div style="display:flex;gap:12px;">
-          <button class="btn btn-primary" onclick="navigate('/dashboard')">Volver al inicio</button>
-          <button class="btn btn-secondary" onclick="navigate('/history')">Ver historial</button>
+          <button class="btn btn-primary" onclick="goTo('/dashboard')">Volver al inicio</button>
+          <button class="btn btn-secondary" onclick="goTo('/history')">Ver historial</button>
         </div>
       </div>
     </div>

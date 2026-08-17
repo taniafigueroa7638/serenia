@@ -14,14 +14,19 @@ function renderLogin() {
           </div>
           <div class="form-group">
             <label>Contraseña</label>
-            <input type="password" name="password" required placeholder="••••••••">
+            <div class="password-wrapper">
+              <input type="password" name="password" id="loginPassword" required placeholder="••••••••">
+              <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)" title="Mostrar/Ocultar">
+                👁️
+              </button>
+            </div>
           </div>
           <div id="loginError"></div>
           <button type="submit" class="btn btn-primary">Iniciar sesión</button>
         </form>
         <div class="auth-footer">
-          <p>¿No tienes cuenta? <a href="#" onclick="navigate('/register'); return false;">Regístrate</a></p>
-          <p style="margin-top:8px;"><a href="#" onclick="navigate('/forgot'); return false;">¿Olvidaste tu contraseña?</a></p>
+          <p>¿No tienes cuenta? <button class="link-btn" onclick="goTo('/register')">Regístrate</button></p>
+          <p style="margin-top:8px;"><button class="link-btn" onclick="goTo('/forgot')">¿Olvidaste tu contraseña?</button></p>
         </div>
       </div>
     </div>
@@ -39,7 +44,7 @@ function renderLogin() {
       state.user = data.user;
       localStorage.setItem('serenia_token', data.token);
       localStorage.setItem('serenia_user', JSON.stringify(data.user));
-      navigate('/dashboard');
+      goTo('/dashboard');
     } catch (err) {
       document.getElementById('loginError').innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
     }
@@ -72,8 +77,13 @@ function renderRegister() {
           </div>
           <div class="form-group">
             <label>Contraseña *</label>
-            <input type="password" name="password" required minlength="8"
-              placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número">
+            <div class="password-wrapper">
+              <input type="password" name="password" id="regPassword" required minlength="8"
+                placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número">
+              <button type="button" class="toggle-password" onclick="togglePassword('regPassword', this)" title="Mostrar/Ocultar">
+                👁️
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>Fecha de nacimiento *</label>
@@ -99,7 +109,7 @@ function renderRegister() {
           <button type="submit" class="btn btn-primary">Crear cuenta</button>
         </form>
         <div class="auth-footer">
-          <p>¿Ya tienes cuenta? <a href="#" onclick="navigate('/login'); return false;">Inicia sesión</a></p>
+          <p>¿Ya tienes cuenta? <button class="link-btn" onclick="goTo('/login')">Inicia sesión</button></p>
         </div>
       </div>
     </div>
@@ -122,7 +132,7 @@ function renderRegister() {
         }
       });
       localStorage.setItem('pending_email', formData.get('email'));
-      navigate('/verify');
+      goTo('/verify');
     } catch (err) {
       document.getElementById('registerError').innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
     }
@@ -131,7 +141,7 @@ function renderRegister() {
 
 function renderVerify() {
   const email = localStorage.getItem('pending_email');
-  if (!email) { navigate('/register'); return; }
+  if (!email) { goTo('/register'); return; }
 
   document.getElementById('app').innerHTML = `
     <div class="auth-container">
@@ -146,7 +156,7 @@ function renderVerify() {
           <div id="verifyError"></div>
           <button class="btn btn-primary" onclick="submitCode()">Verificar</button>
           <div class="auth-footer">
-            <p>¿No recibiste el código? <a href="#" onclick="resendCode(); return false;">Reenviar</a></p>
+            <p>¿No recibiste el código? <button class="link-btn" onclick="resendCode()">Reenviar</button></p>
           </div>
         </div>
       </div>
@@ -179,7 +189,7 @@ async function submitCode() {
     localStorage.setItem('serenia_token', data.token);
     localStorage.setItem('serenia_user', JSON.stringify(data.user));
     localStorage.removeItem('pending_email');
-    navigate('/dashboard');
+    goTo('/dashboard');
   } catch (err) {
     document.getElementById('verifyError').innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
   }
@@ -213,7 +223,7 @@ function renderForgot() {
           <button type="submit" class="btn btn-primary">Enviar enlace</button>
         </form>
         <div class="auth-footer">
-          <a href="#" onclick="navigate('/login'); return false;">← Volver al login</a>
+          <button class="link-btn" onclick="goTo('/login')">← Volver al login</button>
         </div>
       </div>
     </div>
@@ -245,7 +255,12 @@ function renderReset() {
         <form id="resetForm">
           <div class="form-group">
             <label>Nueva contraseña</label>
-            <input type="password" name="password" required minlength="8">
+            <div class="password-wrapper">
+              <input type="password" name="password" id="resetPassword" required minlength="8">
+              <button type="button" class="toggle-password" onclick="togglePassword('resetPassword', this)" title="Mostrar/Ocultar">
+                👁️
+              </button>
+            </div>
           </div>
           <div id="resetMessage"></div>
           <button type="submit" class="btn btn-primary">Actualizar contraseña</button>
@@ -259,9 +274,23 @@ function renderReset() {
     const password = new FormData(e.target).get('password');
     try {
       await api('/auth/reset-password', { method: 'POST', body: { token, newPassword: password } });
-      document.getElementById('resetMessage').innerHTML = `<div class="alert alert-success">✅ Contraseña actualizada. <a href="#" onclick="navigate('/login'); return false;">Iniciar sesión</a></div>`;
+      document.getElementById('resetMessage').innerHTML = `<div class="alert alert-success">✅ Contraseña actualizada. <button class="link-btn" onclick="goTo('/login')">Iniciar sesión</button></div>`;
     } catch (err) {
       document.getElementById('resetMessage').innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
     }
   });
+}
+
+// Toggle password visibility
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+    btn.title = 'Ocultar';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+    btn.title = 'Mostrar';
+  }
 }

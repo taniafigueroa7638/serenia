@@ -19,13 +19,19 @@ const routes = {
 };
 
 function requireAuth(fn) {
-  if (!state.token) { navigate('/login'); return; }
+  if (!state.token) { goTo('/login'); return; }
   fn();
 }
 
-function navigate(path) {
+// goTo: navegación robusta que funciona con botones
+function goTo(path) {
   window.history.pushState({}, '', path);
   router();
+}
+
+// navigate: alias para compatibilidad
+function navigate(path) {
+  goTo(path);
 }
 
 function router() {
@@ -36,6 +42,7 @@ function router() {
 
 window.addEventListener('popstate', router);
 
+// API helper
 async function api(endpoint, options = {}) {
   const url = `${API_URL}/api${endpoint}`;
   const config = {
@@ -70,22 +77,22 @@ function logout() {
   state.user = null;
   localStorage.removeItem('serenia_token');
   localStorage.removeItem('serenia_user');
-  navigate('/login');
+  goTo('/login');
 }
 
 function renderNavbar() {
   if (!state.token) return '';
   return `
     <nav class="navbar">
-      <a href="#" class="logo" onclick="navigate('/dashboard'); return false;">
+      <a href="/dashboard" class="logo" onclick="goTo('/dashboard'); return false;">
         <span style="font-size:28px;">🧘</span>
         <span>Serenia</span>
       </a>
       <div class="nav-links">
-        <a href="#" onclick="navigate('/dashboard'); return false;">Inicio</a>
-        <a href="#" onclick="navigate('/questionnaire'); return false;">Cuestionario</a>
-        <a href="#" onclick="navigate('/history'); return false;">Historial</a>
-        <a href="#" onclick="navigate('/profile'); return false;">Perfil</a>
+        <a href="/dashboard" onclick="goTo('/dashboard'); return false;">Inicio</a>
+        <a href="/questionnaire" onclick="goTo('/questionnaire'); return false;">Cuestionario</a>
+        <a href="/history" onclick="goTo('/history'); return false;">Historial</a>
+        <a href="/profile" onclick="goTo('/profile'); return false;">Perfil</a>
         <button onclick="logout()">Cerrar sesión</button>
       </div>
     </nav>

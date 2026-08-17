@@ -32,12 +32,12 @@ async function renderDashboard() {
         <div class="glass" style="padding:32px;border-radius:var(--radius);text-align:center;">
           <h2 style="margin-bottom:16px;color:var(--primary-dark);">¿Cómo te sientes hoy?</h2>
           <p style="color:var(--text-light);margin-bottom:24px;">Realiza un nuevo cuestionario para evaluar tu estado emocional actual.</p>
-          <button class="btn btn-primary" style="max-width:300px;margin:0 auto;" onclick="navigate('/questionnaire')">
+          <button class="btn btn-primary" style="max-width:300px;margin:0 auto;" onclick="goTo('/questionnaire')">
             📝 Realizar cuestionario
           </button>
         </div>
       </div>
-      <button class="fab" onclick="navigate('/questionnaire')" title="Nuevo cuestionario">+</button>
+      <button class="fab" onclick="goTo('/questionnaire')" title="Nuevo cuestionario">+</button>
     `;
   } catch (err) {
     document.getElementById('app').innerHTML = `
@@ -68,7 +68,7 @@ async function renderHistory() {
             <div style="font-size:48px;margin-bottom:16px;">📝</div>
             <h3>Aún no tienes cuestionarios</h3>
             <p style="color:var(--text-light);margin:16px 0;">Realiza tu primer cuestionario para comenzar a hacer seguimiento.</p>
-            <button class="btn btn-primary" style="max-width:250px;margin:0 auto;" onclick="navigate('/questionnaire')">Comenzar</button>
+            <button class="btn btn-primary" style="max-width:250px;margin:0 auto;" onclick="goTo('/questionnaire')">Comenzar</button>
           </div>
         ` : `
           <div class="glass" style="padding:24px;border-radius:var(--radius);overflow-x:auto;">
@@ -142,7 +142,7 @@ async function verDetalleCuestionario(id) {
               <div style="font-size:14px;color:var(--text-light);">Respuesta: <strong>${a.respuesta}</strong></div>
             </div>
           `).join('')}
-          <button class="btn btn-secondary" style="margin-top:24px;" onclick="navigate('/history')">← Volver al historial</button>
+          <button class="btn btn-secondary" style="margin-top:24px;" onclick="goTo('/history')">← Volver al historial</button>
         </div>
       </div>
     `;
