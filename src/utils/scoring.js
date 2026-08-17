@@ -1,12 +1,12 @@
 /**
  * Sistema de puntuación del Cuestionario Serenia
- * Basado en las preguntas proporcionadas
+ * Basado en las preguntas proporcionadas en los documentos
  */
 
 const PREGUNTAS = [
   { num: 1, texto: '¿Con qué frecuencia te has sentido estresado durante la última semana?', categoria: 'estres', invertida: false },
   { num: 2, texto: '¿Te has sentido molesto por situaciones inesperadas recientemente?', categoria: 'estres', invertida: false },
-  { num: 3, texto: '¿Te sientes capaz de manejar tus problemas personales?', categoria: 'estres', invertida: true }, // Invertida
+  { num: 3, texto: '¿Te sientes capaz de manejar tus problemas personales?', categoria: 'estres', invertida: true },
   { num: 4, texto: '¿Te has enojado por situaciones que estaban fuera de tu control?', categoria: 'estres', invertida: false },
   { num: 5, texto: '¿Te has sentido nervioso o intranquilo últimamente?', categoria: 'ansiedad', invertida: false },
   { num: 6, texto: '¿Has tenido dificultad para relajarte?', categoria: 'ansiedad', invertida: false },

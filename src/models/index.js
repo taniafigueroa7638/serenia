@@ -1,64 +1,68 @@
-const db = require('../config/database');
+const { query } = require('../config/database');
 
-const initDatabase = () => {
-  // Tabla de usuarios
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nombre TEXT NOT NULL,
-      apellido TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      fecha_nacimiento TEXT NOT NULL,
-      edad INTEGER NOT NULL,
-      telefono TEXT,
-      sexo TEXT CHECK(sexo IN ('masculino', 'femenino', 'otro', 'prefiero_no_decir')),
-      verification_code TEXT,
-      is_verified INTEGER DEFAULT 0,
-      reset_token TEXT,
-      reset_token_expires INTEGER,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+const initDatabase = async () => {
+  try {
+    // Tabla de usuarios
+    await query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(50) NOT NULL,
+        apellido VARCHAR(50) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        fecha_nacimiento DATE NOT NULL,
+        edad INTEGER NOT NULL,
+        telefono VARCHAR(20),
+        sexo VARCHAR(20) CHECK (sexo IN ('masculino', 'femenino', 'otro', 'prefiero_no_decir')),
+        verification_code VARCHAR(10),
+        is_verified BOOLEAN DEFAULT FALSE,
+        reset_token VARCHAR(255),
+        reset_token_expires TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  // Tabla de cuestionarios
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS questionnaires (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      fecha TEXT NOT NULL,
-      estres_score INTEGER NOT NULL,
-      ansiedad_score INTEGER NOT NULL,
-      estado_emocional TEXT NOT NULL,
-      emocion_principal TEXT NOT NULL,
-      resultado_general TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
+    // Tabla de cuestionarios
+    await query(`
+      CREATE TABLE IF NOT EXISTS questionnaires (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        estres_score INTEGER NOT NULL,
+        ansiedad_score INTEGER NOT NULL,
+        estado_emocional VARCHAR(50) NOT NULL,
+        emocion_principal VARCHAR(50) NOT NULL,
+        resultado_general VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  // Tabla de respuestas individuales
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS answers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      questionnaire_id INTEGER NOT NULL,
-      pregunta_numero INTEGER NOT NULL,
-      pregunta_texto TEXT NOT NULL,
-      respuesta TEXT NOT NULL,
-      valor_numerico INTEGER,
-      categoria TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (questionnaire_id) REFERENCES questionnaires(id) ON DELETE CASCADE
-    )
-  `);
+    // Tabla de respuestas individuales
+    await query(`
+      CREATE TABLE IF NOT EXISTS answers (
+        id SERIAL PRIMARY KEY,
+        questionnaire_id INTEGER NOT NULL REFERENCES questionnaires(id) ON DELETE CASCADE,
+        pregunta_numero INTEGER NOT NULL,
+        pregunta_texto TEXT NOT NULL,
+        respuesta VARCHAR(100) NOT NULL,
+        valor_numerico INTEGER,
+        categoria VARCHAR(20) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  // Índices para rendimiento
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_users_reset ON users(reset_token)`);
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_q_user ON questionnaires(user_id)`);
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_a_questionnaire ON answers(questionnaire_id)`);
+    // Índices para rendimiento
+    await query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_users_reset ON users(reset_token)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_q_user ON questionnaires(user_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_q_created ON questionnaires(created_at)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_a_questionnaire ON answers(questionnaire_id)`);
 
-  console.log('✅ Base de datos inicializada');
+    console.log('✅ Tablas e índices de PostgreSQL creados/verificados');
+  } catch (err) {
+    console.error('❌ Error al inicializar base de datos:', err.message);
+    throw err;
+  }
 };
 
-module.exports = { db, initDatabase };
+module.exports = { query, initDatabase };

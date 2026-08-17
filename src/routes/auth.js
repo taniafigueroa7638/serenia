@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-const { db } = require('../models');
+const { query } = require('../models');
 const { sendVerificationCode, sendPasswordReset, generateCode } = require('../services/email');
 const { validate, registerValidation, loginValidation } = require('../middleware/validator');
 const { calcularEdad, generateToken } = require('../utils/helpers');
@@ -15,27 +15,27 @@ router.post('/register', validate(registerValidation), async (req, res) => {
     const { nombre, apellido, email, password, fechaNacimiento, telefono, sexo } = req.body;
 
     // Verificar email único
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-    if (existing) {
+    const existing = await query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rows.length > 0) {
       return res.status(409).json({ error: 'El email ya está registrado' });
     }
 
     const edad = calcularEdad(fechaNacimiento);
     const passwordHash = await bcrypt.hash(password, 12);
     const verificationCode = generateCode();
-    const codeExpires = Date.now() + 30 * 60 * 1000; // 30 min
 
-    const result = db.prepare(`
+    const result = await query(`
       INSERT INTO users (nombre, apellido, email, password_hash, fecha_nacimiento, edad, telefono, sexo, verification_code)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(nombre, apellido, email, passwordHash, fechaNacimiento, edad, telefono || null, sexo || null, verificationCode);
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id
+    `, [nombre, apellido, email, passwordHash, fechaNacimiento, edad, telefono || null, sexo || null, verificationCode]);
 
     // Enviar email de verificación
     await sendVerificationCode(email, verificationCode, nombre);
 
     res.status(201).json({
       message: 'Registro exitoso. Revisa tu email para el código de verificación.',
-      userId: result.lastInsertRowid
+      userId: result.rows[0].id
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -47,14 +47,22 @@ router.post('/register', validate(registerValidation), async (req, res) => {
 router.post('/verify-email', async (req, res) => {
   try {
     const { email, code } = req.body;
-    
-    const user = db.prepare('SELECT * FROM users WHERE email = ? AND verification_code = ?').get(email, code);
-    
+
+    const result = await query(
+      'SELECT * FROM users WHERE email = $1 AND verification_code = $2',
+      [email, code]
+    );
+
+    const user = result.rows[0];
+
     if (!user) {
       return res.status(400).json({ error: 'Código inválido' });
     }
 
-    db.prepare('UPDATE users SET is_verified = 1, verification_code = NULL WHERE id = ?').run(user.id);
+    await query(
+      'UPDATE users SET is_verified = TRUE, verification_code = NULL WHERE id = $1',
+      [user.id]
+    );
 
     const token = jwt.sign(
       { userId: user.id, email: user.email },
@@ -81,14 +89,19 @@ router.post('/verify-email', async (req, res) => {
 router.post('/resend-code', async (req, res) => {
   try {
     const { email } = req.body;
-    const user = db.prepare('SELECT * FROM users WHERE email = ? AND is_verified = 0').get(email);
-    
+    const result = await query(
+      'SELECT * FROM users WHERE email = $1 AND is_verified = FALSE',
+      [email]
+    );
+
+    const user = result.rows[0];
+
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado o ya verificado' });
     }
 
     const newCode = generateCode();
-    db.prepare('UPDATE users SET verification_code = ? WHERE id = ?').run(newCode, user.id);
+    await query('UPDATE users SET verification_code = $1 WHERE id = $2', [newCode, user.id]);
     await sendVerificationCode(email, newCode, user.nombre);
 
     res.json({ message: 'Código reenviado' });
@@ -102,7 +115,9 @@ router.post('/login', validate(loginValidation), async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
     if (!user) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
@@ -140,18 +155,25 @@ router.post('/login', validate(loginValidation), async (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    const user = db.prepare('SELECT * FROM users WHERE email = ? AND is_verified = 1').get(email);
-    
+    const result = await query(
+      'SELECT * FROM users WHERE email = $1 AND is_verified = TRUE',
+      [email]
+    );
+
+    const user = result.rows[0];
+
     if (!user) {
       // Respuesta genérica por seguridad
       return res.json({ message: 'Si el email existe, recibirás instrucciones.' });
     }
 
     const resetToken = generateToken();
-    const expires = Date.now() + 60 * 60 * 1000; // 1 hora
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 
-    db.prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?')
-      .run(resetToken, expires, user.id);
+    await query(
+      'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3',
+      [resetToken, expires, user.id]
+    );
 
     await sendPasswordReset(email, resetToken, user.nombre);
 
@@ -171,16 +193,22 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > ?')
-      .get(token, Date.now());
+    const result = await query(
+      'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()',
+      [token]
+    );
+
+    const user = result.rows[0];
 
     if (!user) {
       return res.status(400).json({ error: 'Token inválido o expirado' });
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    db.prepare('UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?')
-      .run(passwordHash, user.id);
+    await query(
+      'UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2',
+      [passwordHash, user.id]
+    );
 
     res.json({ message: 'Contraseña actualizada correctamente' });
   } catch (err) {

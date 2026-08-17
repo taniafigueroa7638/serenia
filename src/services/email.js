@@ -66,7 +66,7 @@ const sendVerificationCode = async (email, code, nombre) => {
 
 const sendPasswordReset = async (email, token, nombre) => {
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password.html?token=${token}`;
-  
+
   const html = `
     <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background: linear-gradient(135deg, #f5f0ff 0%, #e8f5e9 100%); border-radius: 16px;">
       <div style="text-align: center; margin-bottom: 30px;">

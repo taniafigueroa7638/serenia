@@ -1,12 +1,20 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+const { Pool } = require('pg');
 
-const dbPath = process.env.NODE_ENV === 'production' 
-  ? '/tmp/serenia.db' 
-  : path.join(__dirname, '../../serenia.db');
+// Parse DATABASE_URL o usar variables separadas
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20, // máximo de conexiones en pool
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+// Manejo de errores del pool
+pool.on('error', (err) => {
+  console.error('Error inesperado en pool de PostgreSQL:', err);
+});
 
-module.exports = db;
+// Helper para queries
+const query = (text, params) => pool.query(text, params);
+
+module.exports = { pool, query };
