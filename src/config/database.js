@@ -1,20 +1,22 @@
 const { Pool } = require('pg');
 
-// Parse DATABASE_URL o usar variables separadas
+// Configuración SSL para Aiven (certificados self-signed)
+const sslConfig = process.env.NODE_ENV === 'production'
+  ? { rejectUnauthorized: false }
+  : false;
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20, // máximo de conexiones en pool
+  ssl: sslConfig,
+  max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
 });
 
-// Manejo de errores del pool
 pool.on('error', (err) => {
   console.error('Error inesperado en pool de PostgreSQL:', err);
 });
 
-// Helper para queries
 const query = (text, params) => pool.query(text, params);
 
 module.exports = { pool, query };
