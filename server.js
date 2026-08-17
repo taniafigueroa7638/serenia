@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 10000;
 
 async function startServer() {
   try {
-    // Inicializar base de datos PRIMERO
     await initDatabase();
     console.log('✅ Base de datos lista');
   } catch (err) {
@@ -42,19 +41,9 @@ async function startServer() {
     }
   }));
 
-  // CORS
-  const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL]
-    : ['http://localhost:3000', 'http://127.0.0.1:5500', 'http://localhost:5500'];
-
+  // CORS PERMISIVO para producción (mismo dominio o cualquier origin en Render)
   app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('No permitido por CORS'));
-      }
-    },
+    origin: true,  // ← Refleja el origin de la petición
     credentials: true
   }));
 
