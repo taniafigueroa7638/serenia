@@ -30,16 +30,30 @@ router.post('/register', validate(registerValidation), async (req, res) => {
       RETURNING id
     `, [nombre, apellido, email, passwordHash, fechaNacimiento, edad, telefono || null, sexo || null, verificationCode]);
 
-    // Enviar email de verificación
-    await sendVerificationCode(email, verificationCode, nombre);
+    // Intentar enviar email, pero NO fallar si no se puede
+    let emailSent = false;
+    let devCode = null;
+    try {
+      await sendVerificationCode(email, verificationCode, nombre);
+      emailSent = true;
+    } catch (emailErr) {
+      console.error('Email error (no crítico):', emailErr.message);
+      // En desarrollo, devolver el código para poder verificar
+      if (!process.env.BREVO_API_KEY) {
+        devCode = verificationCode;
+      }
+    }
 
     res.status(201).json({
-      message: 'Registro exitoso. Revisa tu email para el código de verificación.',
-      userId: result.rows[0].id
+      message: emailSent 
+        ? 'Registro exitoso. Revisa tu email para el código de verificación.'
+        : 'Registro exitoso. (Modo desarrollo: revisa los logs del servidor para el código)',
+      userId: result.rows[0].id,
+      ...(devCode && { devCode })
     });
   } catch (err) {
     console.error('Register error:', err);
-    res.status(500).json({ error: 'Error al registrar usuario' });
+    res.status(500).json({ error: 'Error al registrar usuario: ' + err.message });
   }
 });
 
@@ -81,6 +95,7 @@ router.post('/verify-email', async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('Verify error:', err);
     res.status(500).json({ error: 'Error al verificar email' });
   }
 });
@@ -102,10 +117,16 @@ router.post('/resend-code', async (req, res) => {
 
     const newCode = generateCode();
     await query('UPDATE users SET verification_code = $1 WHERE id = $2', [newCode, user.id]);
-    await sendVerificationCode(email, newCode, user.nombre);
+
+    try {
+      await sendVerificationCode(email, newCode, user.nombre);
+    } catch (emailErr) {
+      console.error('Resend email error:', emailErr.message);
+    }
 
     res.json({ message: 'Código reenviado' });
   } catch (err) {
+    console.error('Resend error:', err);
     res.status(500).json({ error: 'Error al reenviar código' });
   }
 });
@@ -147,6 +168,7 @@ router.post('/login', validate(loginValidation), async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 });
@@ -163,19 +185,22 @@ router.post('/forgot-password', async (req, res) => {
     const user = result.rows[0];
 
     if (!user) {
-      // Respuesta genérica por seguridad
       return res.json({ message: 'Si el email existe, recibirás instrucciones.' });
     }
 
     const resetToken = generateToken();
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
 
     await query(
       'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3',
       [resetToken, expires, user.id]
     );
 
-    await sendPasswordReset(email, resetToken, user.nombre);
+    try {
+      await sendPasswordReset(email, resetToken, user.nombre);
+    } catch (emailErr) {
+      console.error('Reset email error:', emailErr.message);
+    }
 
     res.json({ message: 'Si el email existe, recibirás instrucciones.' });
   } catch (err) {
@@ -212,6 +237,7 @@ router.post('/reset-password', async (req, res) => {
 
     res.json({ message: 'Contraseña actualizada correctamente' });
   } catch (err) {
+    console.error('Reset error:', err);
     res.status(500).json({ error: 'Error al resetear contraseña' });
   }
 });
