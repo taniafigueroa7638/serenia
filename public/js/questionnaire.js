@@ -110,12 +110,8 @@ function mostrarPregunta() {
             </button>
           `).join('')}
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:24px;" id="navButtons">
+        <div style="display:flex;justify-content:flex-start;margin-top:24px;" id="navButtons">
           <button class="btn btn-secondary" id="btnPrev" style="width:auto;padding:12px 24px;">← Anterior</button>
-          ${respuestasActuales[pregunta.num] !== undefined ?
-            `<button class="btn btn-primary" id="btnNext" style="width:auto;padding:12px 24px;">
-              ${preguntaActual === PREGUNTAS_DATA.length - 1 ? 'Finalizar →' : 'Siguiente →'}
-            </button>` : '<div></div>'}
         </div>
       </div>
     </div>
@@ -132,25 +128,26 @@ function mostrarPregunta() {
 
   // Bind prev button
   document.getElementById('btnPrev').addEventListener('click', preguntaAnterior);
-
-  // Bind next button
-  const btnNext = document.getElementById('btnNext');
-  if (btnNext) btnNext.addEventListener('click', siguientePregunta);
 }
 
 function seleccionarRespuesta(num, valor) {
   respuestasActuales[num] = valor;
-  // Avance automático breve para agilizar el flujo, salvo en la última pregunta
-  mostrarPregunta();
-}
 
-function siguientePregunta() {
-  if (preguntaActual < PREGUNTAS_DATA.length - 1) {
-    preguntaActual++;
-    mostrarPregunta();
-  } else {
-    enviarCuestionario();
-  }
+  // Marca visualmente la opción elegida antes de avanzar
+  document.querySelectorAll('#optionsGrid .option-btn').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.valor) === valor);
+  });
+  document.querySelectorAll('#optionsGrid .option-btn').forEach(btn => btn.disabled = true);
+
+  // Avanza automáticamente a la siguiente pregunta (o finaliza si era la última)
+  setTimeout(() => {
+    if (preguntaActual < PREGUNTAS_DATA.length - 1) {
+      preguntaActual++;
+      mostrarPregunta();
+    } else {
+      enviarCuestionario();
+    }
+  }, 350);
 }
 
 function preguntaAnterior() {
@@ -169,8 +166,10 @@ async function enviarCuestionario() {
     valor
   }));
 
-  const btnNext = document.getElementById('btnNext');
-  if (btnNext) { btnNext.disabled = true; btnNext.textContent = 'Calculando...'; }
+  const btnPrev = document.getElementById('btnPrev');
+  if (btnPrev) btnPrev.disabled = true;
+  const navButtons = document.getElementById('navButtons');
+  if (navButtons) navButtons.insertAdjacentHTML('afterend', '<p id="calculando" style="text-align:center;color:var(--text-light);font-size:13px;margin-top:16px;">Calculando tus resultados...</p>');
 
   try {
     const data = await api('/questionnaire', {
@@ -180,7 +179,9 @@ async function enviarCuestionario() {
     renderResults(data.scores);
   } catch (err) {
     alert('Error: ' + err.message);
-    if (btnNext) { btnNext.disabled = false; btnNext.textContent = 'Finalizar →'; }
+    if (btnPrev) btnPrev.disabled = false;
+    document.getElementById('calculando')?.remove();
+    document.querySelectorAll('#optionsGrid .option-btn').forEach(btn => btn.disabled = false);
   }
 }
 

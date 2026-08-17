@@ -362,6 +362,26 @@ body {
 
 .option-emoji { font-size: 22px; }
 
+.option-btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.option-btn:disabled:hover {
+  transform: none;
+  background: white;
+  border-color: rgba(126, 87, 194, 0.12);
+}
+
+.option-btn.selected:disabled {
+  opacity: 1;
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 /* Results */
 .results-container {
   padding-top: 80px;
