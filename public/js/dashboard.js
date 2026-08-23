@@ -96,6 +96,32 @@ async function renderDashboard() {
           </button>
         </section>
 
+        <section class="relaxation-games-section">
+          <div class="section-heading">
+            <div>
+              <span class="section-eyebrow">Actividades interactivas</span>
+              <h2>Un espacio para relajarte</h2>
+            </div>
+            <p>Haz una pausa breve y concentra tu atención en una actividad tranquila.</p>
+          </div>
+          <div class="relaxation-games-grid">
+            <button class="relaxation-game-card bubbles-game-card glass" data-navigate="/games/bubbles">
+              <span class="game-card-visual" aria-hidden="true">
+                <span class="game-card-bubble bubble-one"></span>
+                <span class="game-card-bubble bubble-two"></span>
+                <span class="game-card-bubble bubble-three"></span>
+                <span class="game-card-bubble bubble-four"></span>
+              </span>
+              <span class="game-card-copy">
+                <small>Minijuego de relajación</small>
+                <strong>Burbujas de calma</strong>
+                <span>Explota burbujas a tu ritmo, sin perder vidas ni competir.</span>
+              </span>
+              <span class="game-card-action">Jugar →</span>
+            </button>
+          </div>
+        </section>
+
         ${weeklyStatus ? `
           <section class="weekly-dashboard glass">
             <div>

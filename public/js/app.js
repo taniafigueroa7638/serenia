@@ -17,6 +17,7 @@ const routes = {
   '/dashboard': () => requireAuth(renderDashboard),
   '/questionnaire': () => requireAuth(renderQuestionnaire, false),
   '/diary': () => requireAuth(renderDiary),
+  '/games/bubbles': () => requireAuth(renderBubbleGame),
   '/history': () => requireAuth(renderHistory),
   '/profile': () => requireAuth(renderProfile),
 };
@@ -65,6 +66,7 @@ function escapeHtml(value) {
 
 function router() {
   if (typeof stopSuggestionRotation === 'function') stopSuggestionRotation();
+  if (typeof stopBubbleGame === 'function') stopBubbleGame();
   const path = window.location.pathname;
   const handler = routes[path] || routes['/'];
   handler();
