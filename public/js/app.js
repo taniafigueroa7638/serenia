@@ -54,6 +54,7 @@ function navigate(path) {
 }
 
 function router() {
+  if (typeof stopSuggestionRotation === 'function') stopSuggestionRotation();
   const path = window.location.pathname;
   const handler = routes[path] || routes['/'];
   handler();

@@ -1,8 +1,48 @@
+const SERENIA_SUGGESTIONS = [
+  'Tómate unos minutos para respirar lentamente y relajar tu cuerpo.',
+  'Haz una pausa breve y aléjate unos minutos de aquello que te genera tensión.',
+  'Recuerda hidratarte y descansar cuando lo necesites.',
+  'Escuchar música tranquila puede ayudarte a crear un momento de calma.',
+  'Dedica unos minutos a realizar una actividad que disfrutes.',
+];
+
+let suggestionIntervalId = null;
+
+function stopSuggestionRotation() {
+  if (suggestionIntervalId) {
+    clearInterval(suggestionIntervalId);
+    suggestionIntervalId = null;
+  }
+}
+
+function startSuggestionRotation() {
+  stopSuggestionRotation();
+  const suggestionElement = document.getElementById('wellnessSuggestion');
+  const dots = document.querySelectorAll('.suggestion-dot');
+  if (!suggestionElement) return;
+
+  let currentIndex = 0;
+  suggestionIntervalId = setInterval(() => {
+    currentIndex = (currentIndex + 1) % SERENIA_SUGGESTIONS.length;
+    suggestionElement.classList.add('is-changing');
+
+    setTimeout(() => {
+      if (!suggestionElement.isConnected) return;
+      suggestionElement.textContent = SERENIA_SUGGESTIONS[currentIndex];
+      suggestionElement.classList.remove('is-changing');
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('is-active', index === currentIndex);
+      });
+    }, 180);
+  }, 5000);
+}
+
 async function renderDashboard() {
   try {
     const data = await api('/user/profile');
     const { user, stats } = data;
     const weeklyStatus = state.questionnaireStatus;
+    if (!['/', '/dashboard'].includes(window.location.pathname)) return;
 
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
@@ -33,6 +73,16 @@ async function renderDashboard() {
             <div class="value">${stats.promedio_ansiedad}</div>
             <div class="label">Promedio de ansiedad</div>
           </div>
+          <div class="stat-card suggestion-card glass">
+            <div class="icon">🌿</div>
+            <div class="suggestion-title">Un momento para ti</div>
+            <div class="suggestion-text" id="wellnessSuggestion">${SERENIA_SUGGESTIONS[0]}</div>
+            <div class="suggestion-dots" aria-hidden="true">
+              ${SERENIA_SUGGESTIONS.map((_, index) => `
+                <span class="suggestion-dot ${index === 0 ? 'is-active' : ''}"></span>
+              `).join('')}
+            </div>
+          </div>
         </div>
 
         ${weeklyStatus ? `
@@ -60,6 +110,7 @@ async function renderDashboard() {
       </div>
       <button class="fab" data-navigate="/questionnaire" title="Nuevo cuestionario">+</button>
     `;
+    startSuggestionRotation();
   } catch (err) {
     if (!state.token) return;
     document.getElementById('app').innerHTML = `
