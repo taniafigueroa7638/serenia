@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { pool, query } = require('../config/database');
 
 const initDatabase = async () => {
   try {
@@ -33,8 +33,37 @@ const initDatabase = async () => {
         estado_emocional VARCHAR(50) NOT NULL,
         emocion_principal VARCHAR(50) NOT NULL,
         resultado_general VARCHAR(100) NOT NULL,
+        tipo VARCHAR(20) NOT NULL DEFAULT 'instrumentos',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Migración compatible con instalaciones existentes: los registros
+    // anteriores corresponden al cuestionario PSS-10 + GAD-7.
+    await query(`
+      ALTER TABLE questionnaires
+      ADD COLUMN IF NOT EXISTS tipo VARCHAR(20) NOT NULL DEFAULT 'instrumentos'
+    `);
+    await query(`UPDATE questionnaires SET tipo = 'instrumentos' WHERE tipo IS NULL`);
+    await query(`
+      ALTER TABLE questionnaires
+      ALTER COLUMN tipo SET DEFAULT 'instrumentos',
+      ALTER COLUMN tipo SET NOT NULL
+    `);
+
+    await query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conname = 'questionnaires_tipo_check'
+            AND conrelid = 'questionnaires'::regclass
+        ) THEN
+          ALTER TABLE questionnaires
+          ADD CONSTRAINT questionnaires_tipo_check
+          CHECK (tipo IN ('serenia', 'instrumentos'));
+        END IF;
+      END $$
     `);
 
     // Tabla de respuestas individuales
@@ -56,6 +85,7 @@ const initDatabase = async () => {
     await query(`CREATE INDEX IF NOT EXISTS idx_users_reset ON users(reset_token)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_q_user ON questionnaires(user_id)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_q_created ON questionnaires(created_at)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_q_user_tipo_created ON questionnaires(user_id, tipo, created_at DESC)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_a_questionnaire ON answers(questionnaire_id)`);
 
     console.log('✅ Tablas e índices de PostgreSQL creados/verificados');
@@ -65,4 +95,4 @@ const initDatabase = async () => {
   }
 };
 
-module.exports = { query, initDatabase };
+module.exports = { pool, query, initDatabase };

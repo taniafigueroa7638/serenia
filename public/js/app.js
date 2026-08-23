@@ -2,24 +2,45 @@ const API_URL = '';
 
 const state = {
   token: localStorage.getItem('serenia_token'),
-  user: JSON.parse(localStorage.getItem('serenia_user') || 'null')
+  user: JSON.parse(localStorage.getItem('serenia_user') || 'null'),
+  questionnaireStatus: null,
+  weeklyPromptDismissedAt: Number(sessionStorage.getItem('serenia_weekly_prompt_dismissed_at') || 0)
 };
 
 const routes = {
-  '/': () => state.token ? renderDashboard() : renderLogin(),
+  '/': () => state.token ? requireAuth(renderDashboard) : renderLogin(),
   '/login': () => renderLogin(),
   '/register': () => renderRegister(),
   '/verify': () => renderVerify(),
   '/forgot': () => renderForgot(),
   '/reset': () => renderReset(),
   '/dashboard': () => requireAuth(renderDashboard),
-  '/questionnaire': () => requireAuth(renderQuestionnaire),
+  '/questionnaire': () => requireAuth(renderQuestionnaire, false),
   '/history': () => requireAuth(renderHistory),
   '/profile': () => requireAuth(renderProfile),
 };
 
-function requireAuth(fn) {
+async function requireAuth(fn, enforceWeekly = true) {
   if (!state.token) { goTo('/login'); return; }
+
+  if (enforceWeekly) {
+    try {
+      const data = await api('/questionnaire/status');
+      state.questionnaireStatus = data.status;
+      const dismissalIsCurrent = Date.now() - state.weeklyPromptDismissedAt < 7 * 24 * 60 * 60 * 1000;
+      if (data.status.required && !dismissalIsCurrent) {
+        window.history.replaceState({}, '', '/questionnaire');
+        renderQuestionnaire();
+        return;
+      }
+    } catch (err) {
+      // Si la sesión expiró, api() ya redirigió al login. Un fallo temporal del
+      // estado semanal no debe dejar la aplicación en blanco.
+      if (!state.token) return;
+      console.error('No se pudo comprobar el estado semanal:', err);
+    }
+  }
+
   fn();
 }
 
@@ -59,7 +80,7 @@ async function api(endpoint, options = {}) {
   const data = await response.json();
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && state.token && !endpoint.startsWith('/auth/')) {
       logout();
       throw new Error('Sesión expirada. Por favor inicia sesión de nuevo.');
     }
@@ -72,9 +93,18 @@ async function api(endpoint, options = {}) {
 function logout() {
   state.token = null;
   state.user = null;
+  state.questionnaireStatus = null;
+  state.weeklyPromptDismissedAt = 0;
   localStorage.removeItem('serenia_token');
   localStorage.removeItem('serenia_user');
+  sessionStorage.removeItem('serenia_weekly_prompt_dismissed_at');
   goTo('/login');
+}
+
+function dismissWeeklyPrompt() {
+  state.weeklyPromptDismissedAt = Date.now();
+  sessionStorage.setItem('serenia_weekly_prompt_dismissed_at', String(state.weeklyPromptDismissedAt));
+  goTo('/dashboard');
 }
 
 function renderNavbar() {
@@ -82,12 +112,12 @@ function renderNavbar() {
   return `
     <nav class="navbar">
       <a href="/dashboard" class="logo" data-navigate="/dashboard">
-        <span style="font-size:28px;">🧘</span>
+        <img src="/assets/logo.jpg" alt="Logo de Serenia">
         <span>Serenia</span>
       </a>
       <div class="nav-links">
         <a href="/dashboard" data-navigate="/dashboard">Inicio</a>
-        <a href="/questionnaire" data-navigate="/questionnaire">Cuestionario</a>
+        <a href="/questionnaire" data-navigate="/questionnaire">Evaluaciones</a>
         <a href="/history" data-navigate="/history">Historial</a>
         <a href="/profile" data-navigate="/profile">Perfil</a>
         <button id="navLogout">Cerrar sesión</button>

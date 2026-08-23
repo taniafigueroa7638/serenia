@@ -33,9 +33,44 @@ const loginValidation = [
 ];
 
 const questionnaireValidation = [
-  body('respuestas').isArray({ min: 17, max: 17 }).withMessage('Debe responder las 17 preguntas'),
-  body('respuestas.*.pregunta').isInt({ min: 1, max: 17 }),
-  body('respuestas.*.valor').isInt({ min: 0, max: 4 }),
+  body('tipo')
+    .isIn(['serenia', 'instrumentos'])
+    .withMessage('Tipo de cuestionario inválido'),
+  body('respuestas')
+    .isArray()
+    .withMessage('Las respuestas deben enviarse en una lista')
+    .custom((respuestas, { req }) => {
+      if (!Array.isArray(respuestas)) return false;
+
+      const tipo = req.body.tipo;
+      const totalEsperado = tipo === 'serenia' ? 10 : 17;
+      if (respuestas.length !== totalEsperado) {
+        throw new Error(`Debe responder las ${totalEsperado} preguntas`);
+      }
+
+      const numeros = new Set();
+      for (const respuesta of respuestas) {
+        if (!Number.isInteger(respuesta?.pregunta) || !Number.isInteger(respuesta?.valor)) {
+          throw new Error('Cada respuesta debe incluir pregunta y valor numéricos');
+        }
+        if (respuesta.pregunta < 1 || respuesta.pregunta > totalEsperado) {
+          throw new Error('Número de pregunta fuera de rango');
+        }
+        if (numeros.has(respuesta.pregunta)) {
+          throw new Error('No se permiten preguntas duplicadas');
+        }
+        numeros.add(respuesta.pregunta);
+
+        const maximo = tipo === 'serenia'
+          ? (respuesta.pregunta === 10 ? 7 : 4)
+          : (respuesta.pregunta <= 10 ? 4 : 3);
+        if (respuesta.valor < 0 || respuesta.valor > maximo) {
+          throw new Error('Valor de respuesta fuera de rango');
+        }
+      }
+
+      return true;
+    }),
 ];
 
 module.exports = {

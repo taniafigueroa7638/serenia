@@ -2,6 +2,7 @@ async function renderDashboard() {
   try {
     const data = await api('/user/profile');
     const { user, stats } = data;
+    const weeklyStatus = state.questionnaireStatus;
 
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
@@ -9,13 +10,18 @@ async function renderDashboard() {
         <div class="hero-section glass">
           <h1>Hola, ${user.nombre} 👋</h1>
           <p>Bienvenido de vuelta a Serenia. Tu bienestar emocional es nuestra prioridad.</p>
+          <div class="hero-checkin">
+            <h2>¿Cómo te sientes hoy?</h2>
+            <p>Registra tu estado emocional o realiza los instrumentos de medición.</p>
+            <button class="btn btn-primary" data-navigate="/questionnaire">Responder una evaluación</button>
+          </div>
         </div>
 
         <div class="stats-grid">
           <div class="stat-card glass">
             <div class="icon">📋</div>
             <div class="value">${stats.total_cuestionarios}</div>
-            <div class="label">Cuestionarios completados</div>
+            <div class="label">Evaluaciones completadas</div>
           </div>
           <div class="stat-card glass">
             <div class="icon">😰</div>
@@ -29,17 +35,33 @@ async function renderDashboard() {
           </div>
         </div>
 
-        <div class="glass" style="padding:32px;border-radius:var(--radius);text-align:center;">
-          <h2 style="margin-bottom:16px;color:var(--primary-dark);">¿Cómo te sientes hoy?</h2>
-          <p style="color:var(--text-light);margin-bottom:24px;">Realiza un nuevo cuestionario para evaluar tu estado emocional actual.</p>
-          <button class="btn btn-primary" style="max-width:300px;margin:0 auto;" data-navigate="/questionnaire">
-            📝 Realizar cuestionario
-          </button>
-        </div>
+        ${weeklyStatus ? `
+          <section class="weekly-dashboard glass">
+            <div>
+              <h2>Seguimiento semanal</h2>
+              <p>${weeklyStatus.required
+                ? 'Tienes una o más evaluaciones pendientes. También puedes completarlas después.'
+                : 'Tus dos evaluaciones están al día.'}</p>
+            </div>
+            <div class="weekly-dashboard-actions">
+              ${['serenia', 'instrumentos'].map((tipo) => {
+                const item = weeklyStatus.questionnaires[tipo];
+                const nombre = tipo === 'serenia' ? 'Cuestionario Serenia' : 'PSS-10 + GAD-7';
+                return `
+                  <button class="weekly-dashboard-item ${item.due ? 'is-due' : 'is-current'}" data-navigate="/questionnaire?type=${tipo}">
+                    <span>${tipo === 'serenia' ? '🌿' : '🧘'} ${nombre}</span>
+                    <strong>${item.due ? 'Pendiente' : 'Al día'}</strong>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        ` : ''}
       </div>
       <button class="fab" data-navigate="/questionnaire" title="Nuevo cuestionario">+</button>
     `;
   } catch (err) {
+    if (!state.token) return;
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
       <div class="dashboard container" style="text-align:center;padding-top:120px;">
@@ -76,6 +98,7 @@ async function renderHistory() {
               <thead>
                 <tr>
                   <th>Fecha</th>
+                  <th>Evaluación</th>
                   <th>Estrés</th>
                   <th>Ansiedad</th>
                   <th>Emoción</th>
@@ -86,11 +109,12 @@ async function renderHistory() {
                 ${cuestionarios.map(q => `
                   <tr data-qid="${q.id}" style="cursor:pointer;">
                     <td>${new Date(q.created_at).toLocaleDateString('es-ES')}</td>
-                    <td>${q.estres_score}/40</td>
-                    <td>${q.ansiedad_score}/21</td>
+                    <td>${q.tipo === 'serenia' ? 'Serenia' : 'PSS-10 + GAD-7'}</td>
+                    <td>${q.tipo === 'serenia' ? '—' : `${q.estres_score}/40`}</td>
+                    <td>${q.tipo === 'serenia' ? '—' : `${q.ansiedad_score}/21`}</td>
                     <td>${q.emocion_principal}</td>
                     <td>
-                      <span class="badge ${q.resultado_general === 'Nivel saludable' ? 'badge-low' : q.resultado_general.includes('moderado') ? 'badge-moderate' : 'badge-high'}">
+                      <span class="badge ${q.tipo === 'serenia' ? 'badge-info' : q.resultado_general === 'Nivel saludable' ? 'badge-low' : q.resultado_general.includes('moderado') ? 'badge-moderate' : 'badge-high'}">
                         ${q.resultado_general}
                       </span>
                     </td>
@@ -110,6 +134,7 @@ async function renderHistory() {
       });
     });
   } catch (err) {
+    if (!state.token) return;
     alert('Error: ' + err.message);
   }
 }
@@ -118,22 +143,30 @@ async function verDetalleCuestionario(id) {
   try {
     const data = await api(`/questionnaire/${id}`);
     const { questionnaire, answers } = data;
+    const esSerenia = questionnaire.tipo === 'serenia';
 
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
       <div class="dashboard container">
         <div class="glass" style="padding:32px;border-radius:var(--radius);margin-bottom:24px;">
-          <h2 style="margin-bottom:8px;">Detalle del cuestionario</h2>
+          <h2 style="margin-bottom:8px;">${esSerenia ? 'Cuestionario Serenia' : 'Instrumentos PSS-10 + GAD-7'}</h2>
           <p style="color:var(--text-light);">${new Date(questionnaire.created_at).toLocaleString('es-ES')}</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:24px;">
-            <div style="text-align:center;padding:16px;background:rgba(126,87,194,0.05);border-radius:12px;">
-              <div style="font-size:24px;font-weight:700;color:var(--primary-dark);">${questionnaire.estres_score}</div>
-              <div style="font-size:12px;color:var(--text-light);">Estrés</div>
-            </div>
-            <div style="text-align:center;padding:16px;background:rgba(126,87,194,0.05);border-radius:12px;">
-              <div style="font-size:24px;font-weight:700;color:var(--primary-dark);">${questionnaire.ansiedad_score}</div>
-              <div style="font-size:12px;color:var(--text-light);">Ansiedad</div>
-            </div>
+            ${esSerenia ? `
+              <div style="text-align:center;padding:16px;background:rgba(126,87,194,0.05);border-radius:12px;">
+                <div style="font-size:20px;font-weight:700;color:var(--primary-dark);">${questionnaire.estado_emocional}</div>
+                <div style="font-size:12px;color:var(--text-light);">Estado emocional</div>
+              </div>
+            ` : `
+              <div style="text-align:center;padding:16px;background:rgba(126,87,194,0.05);border-radius:12px;">
+                <div style="font-size:24px;font-weight:700;color:var(--primary-dark);">${questionnaire.estres_score}/40</div>
+                <div style="font-size:12px;color:var(--text-light);">Estrés</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:rgba(126,87,194,0.05);border-radius:12px;">
+                <div style="font-size:24px;font-weight:700;color:var(--primary-dark);">${questionnaire.ansiedad_score}/21</div>
+                <div style="font-size:12px;color:var(--text-light);">Ansiedad</div>
+              </div>
+            `}
             <div style="text-align:center;padding:16px;background:rgba(126,87,194,0.05);border-radius:12px;">
               <div style="font-size:24px;font-weight:700;color:var(--primary-dark);">${questionnaire.emocion_principal}</div>
               <div style="font-size:12px;color:var(--text-light);">Emoción</div>
@@ -154,6 +187,7 @@ async function verDetalleCuestionario(id) {
       </div>
     `;
   } catch (err) {
+    if (!state.token) return;
     alert('Error: ' + err.message);
   }
 }
@@ -204,6 +238,7 @@ async function renderProfile() {
       </div>
     `;
   } catch (err) {
+    if (!state.token) return;
     alert('Error: ' + err.message);
   }
 }

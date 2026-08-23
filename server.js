@@ -3,15 +3,23 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
-const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./src/routes/auth');
 const questionnaireRoutes = require('./src/routes/questionnaire');
 const userRoutes = require('./src/routes/user');
 const { initDatabase } = require('./src/models');
+const {
+  generalLimiter,
+  loginLimiter,
+  sensitiveAuthLimiter
+} = require('./src/middleware/rateLimiter');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// Render termina HTTPS en un proxy. Esto permite que Express y los limitadores
+// identifiquen la IP real del cliente en lugar de tratar a todos como el proxy.
+app.set('trust proxy', 1);
 
 async function startServer() {
   try {
@@ -47,27 +55,20 @@ async function startServer() {
     credentials: true
   }));
 
-  // Rate limiting
-  const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: { error: 'Demasiadas solicitudes. Intente más tarde.' },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-
-  const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: { error: 'Demasiados intentos de autenticación. Intente en 15 minutos.' },
-  });
-
   app.use(generalLimiter);
   app.use(express.json({ limit: '10kb' }));
   app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
   // Rutas API
-  app.use('/api/auth', authLimiter, authRoutes);
+  app.use('/api/auth/login', loginLimiter);
+  app.use([
+    '/api/auth/register',
+    '/api/auth/verify-email',
+    '/api/auth/resend-code',
+    '/api/auth/forgot-password',
+    '/api/auth/reset-password'
+  ], sensitiveAuthLimiter);
+  app.use('/api/auth', authRoutes);
   app.use('/api/questionnaire', questionnaireRoutes);
   app.use('/api/user', userRoutes);
 

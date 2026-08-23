@@ -15,8 +15,10 @@ router.get('/profile', authenticate, async (req, res) => {
     const statsResult = await query(`
       SELECT
         COUNT(*)::int as total_cuestionarios,
-        COALESCE(AVG(estres_score), 0)::numeric(10,2) as promedio_estres,
-        COALESCE(AVG(ansiedad_score), 0)::numeric(10,2) as promedio_ansiedad
+        COUNT(*) FILTER (WHERE tipo = 'serenia')::int as total_serenia,
+        COUNT(*) FILTER (WHERE tipo = 'instrumentos')::int as total_instrumentos,
+        COALESCE(AVG(estres_score) FILTER (WHERE tipo = 'instrumentos'), 0)::numeric(10,2) as promedio_estres,
+        COALESCE(AVG(ansiedad_score) FILTER (WHERE tipo = 'instrumentos'), 0)::numeric(10,2) as promedio_ansiedad
       FROM questionnaires WHERE user_id = $1
     `, [req.user.id]);
 
