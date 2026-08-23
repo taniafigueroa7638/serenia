@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 
 const validate = (validations) => {
   return async (req, res, next) => {
@@ -73,9 +73,43 @@ const questionnaireValidation = [
     }),
 ];
 
+const DIARY_EMOTIONS = [
+  'tranquilo', 'feliz', 'neutral', 'preocupado',
+  'ansioso', 'molesto', 'triste', 'cansado'
+];
+
+const diaryEntryValidation = [
+  body('titulo')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('El título debe tener entre 1 y 100 caracteres'),
+  body('contenido')
+    .trim()
+    .isLength({ min: 1, max: 8000 })
+    .withMessage('La entrada debe tener entre 1 y 8000 caracteres'),
+  body('fecha')
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .isISO8601({ strict: true })
+    .withMessage('Fecha inválida'),
+  body('emocion')
+    .optional({ nullable: true, checkFalsy: true })
+    .isIn(DIARY_EMOTIONS)
+    .withMessage('Emoción inválida'),
+  body('permitirChatbot')
+    .isBoolean()
+    .withMessage('El permiso del chatbot debe ser verdadero o falso')
+    .toBoolean(),
+];
+
+const diaryIdValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Identificador de entrada inválido').toInt(),
+];
+
 module.exports = {
   validate,
   registerValidation,
   loginValidation,
-  questionnaireValidation
+  questionnaireValidation,
+  diaryEntryValidation,
+  diaryIdValidation
 };

@@ -16,6 +16,7 @@ const routes = {
   '/reset': () => renderReset(),
   '/dashboard': () => requireAuth(renderDashboard),
   '/questionnaire': () => requireAuth(renderQuestionnaire, false),
+  '/diary': () => requireAuth(renderDiary),
   '/history': () => requireAuth(renderHistory),
   '/profile': () => requireAuth(renderProfile),
 };
@@ -51,6 +52,15 @@ function goTo(path) {
 
 function navigate(path) {
   goTo(path);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function router() {
@@ -119,6 +129,7 @@ function renderNavbar() {
       <div class="nav-links">
         <a href="/dashboard" data-navigate="/dashboard">Inicio</a>
         <a href="/questionnaire" data-navigate="/questionnaire">Evaluaciones</a>
+        <a href="/diary" data-navigate="/diary">Diario</a>
         <a href="/history" data-navigate="/history">Historial</a>
         <a href="/profile" data-navigate="/profile">Perfil</a>
         <button id="navLogout">Cerrar sesión</button>

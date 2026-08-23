@@ -85,6 +85,17 @@ async function renderDashboard() {
           </div>
         </div>
 
+        <section class="wellness-tools-grid">
+          <button class="wellness-tool-card diary-tool-card glass" data-navigate="/diary">
+            <span class="wellness-tool-icon">📓</span>
+            <span class="wellness-tool-content">
+              <strong>Mi diario</strong>
+              <small>Escribe lo que viviste, cómo te sentiste y conserva cada recuerdo de forma privada.</small>
+            </span>
+            <span class="wellness-tool-action">Escribir →</span>
+          </button>
+        </section>
+
         ${weeklyStatus ? `
           <section class="weekly-dashboard glass">
             <div>

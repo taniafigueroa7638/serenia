@@ -80,6 +80,31 @@ const initDatabase = async () => {
       )
     `);
 
+    // Diario personal. El permiso del chatbot es individual y está desactivado
+    // por defecto para proteger la privacidad de cada entrada.
+    await query(`
+      CREATE TABLE IF NOT EXISTS diary_entries (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        titulo VARCHAR(100) NOT NULL,
+        contenido TEXT NOT NULL,
+        fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+        emocion VARCHAR(20),
+        permitir_chatbot BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT diary_entries_emocion_check CHECK (
+          emocion IS NULL OR emocion IN (
+            'tranquilo', 'feliz', 'neutral', 'preocupado',
+            'ansioso', 'molesto', 'triste', 'cansado'
+          )
+        ),
+        CONSTRAINT diary_entries_contenido_length_check CHECK (
+          char_length(contenido) BETWEEN 1 AND 8000
+        )
+      )
+    `);
+
     // Índices para rendimiento
     await query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_users_reset ON users(reset_token)`);
@@ -87,6 +112,7 @@ const initDatabase = async () => {
     await query(`CREATE INDEX IF NOT EXISTS idx_q_created ON questionnaires(created_at)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_q_user_tipo_created ON questionnaires(user_id, tipo, created_at DESC)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_a_questionnaire ON answers(questionnaire_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_diary_user_fecha ON diary_entries(user_id, fecha DESC, created_at DESC)`);
 
     console.log('✅ Tablas e índices de PostgreSQL creados/verificados');
   } catch (err) {

@@ -7,6 +7,7 @@ const path = require('path');
 const authRoutes = require('./src/routes/auth');
 const questionnaireRoutes = require('./src/routes/questionnaire');
 const userRoutes = require('./src/routes/user');
+const diaryRoutes = require('./src/routes/diary');
 const { initDatabase } = require('./src/models');
 const {
   generalLimiter,
@@ -56,8 +57,8 @@ async function startServer() {
   }));
 
   app.use(generalLimiter);
-  app.use(express.json({ limit: '10kb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+  app.use(express.json({ limit: '50kb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
   // Rutas API
   app.use('/api/auth/login', loginLimiter);
@@ -71,6 +72,7 @@ async function startServer() {
   app.use('/api/auth', authRoutes);
   app.use('/api/questionnaire', questionnaireRoutes);
   app.use('/api/user', userRoutes);
+  app.use('/api/diary', diaryRoutes);
 
   // Health check
   app.get('/health', (req, res) => {
