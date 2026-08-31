@@ -3,6 +3,7 @@ const router = express.Router();
 const { query } = require('../models');
 const { authenticate } = require('../middleware/auth');
 const { calcularEdad } = require('../utils/helpers');
+const { decryptQuestionnaireRow } = require('../utils/sensitiveData');
 
 // Perfil completo
 router.get('/profile', authenticate, async (req, res) => {
@@ -12,19 +13,31 @@ router.get('/profile', authenticate, async (req, res) => {
       FROM users WHERE id = $1
     `, [req.user.id]);
 
-    const statsResult = await query(`
-      SELECT
-        COUNT(*)::int as total_cuestionarios,
-        COUNT(*) FILTER (WHERE tipo = 'serenia')::int as total_serenia,
-        COUNT(*) FILTER (WHERE tipo = 'instrumentos')::int as total_instrumentos,
-        COALESCE(AVG(estres_score) FILTER (WHERE tipo = 'instrumentos'), 0)::numeric(10,2) as promedio_estres,
-        COALESCE(AVG(ansiedad_score) FILTER (WHERE tipo = 'instrumentos'), 0)::numeric(10,2) as promedio_ansiedad
-      FROM questionnaires WHERE user_id = $1
+    const questionnaireResult = await query(`
+      SELECT id, user_id, tipo, encrypted_data
+      FROM questionnaires
+      WHERE user_id = $1
     `, [req.user.id]);
+
+    const questionnaires = questionnaireResult.rows.map(decryptQuestionnaireRow);
+    const instruments = questionnaires.filter(item => item.tipo === 'instrumentos');
+    const average = (field) => {
+      if (instruments.length === 0) return '0.00';
+      const total = instruments.reduce((sum, item) => sum + Number(item[field] || 0), 0);
+      return (total / instruments.length).toFixed(2);
+    };
+
+    const stats = {
+      total_cuestionarios: questionnaires.length,
+      total_serenia: questionnaires.filter(item => item.tipo === 'serenia').length,
+      total_instrumentos: instruments.length,
+      promedio_estres: average('estres_score'),
+      promedio_ansiedad: average('ansiedad_score'),
+    };
 
     res.json({
       user: userResult.rows[0],
-      stats: statsResult.rows[0]
+      stats
     });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener perfil' });

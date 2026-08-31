@@ -178,6 +178,13 @@ body {
   box-shadow: 0 6px 24px rgba(126, 87, 194, 0.4);
 }
 
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
 .btn-secondary {
   background: white;
   color: var(--primary);
@@ -928,6 +935,66 @@ body {
 
 .toggle-password svg {
   display: block;
+}
+
+.password-requirements {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(126, 87, 194, 0.14);
+  border-radius: 10px;
+  background: rgba(126, 87, 194, 0.045);
+}
+
+.password-requirements p {
+  margin: 0 0 7px;
+  color: var(--text-light);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.password-requirements ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.password-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-light);
+  font-size: 12px;
+  transition: color 0.2s ease;
+}
+
+.password-requirement-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  border-radius: 50%;
+  color: var(--text-light);
+  font-weight: 800;
+}
+
+.password-requirements li.is-complete {
+  color: #2e7d32;
+}
+
+.password-requirements li.is-complete .password-requirement-icon {
+  color: white;
+  background: #43a047;
+}
+
+@media (max-width: 520px) {
+  .password-requirements ul {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Link buttons (replace <a> tags) */

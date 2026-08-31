@@ -5,7 +5,12 @@ const router = express.Router();
 
 const { query } = require('../models');
 const { sendVerificationCode, sendPasswordReset, generateCode } = require('../services/email');
-const { validate, registerValidation, loginValidation } = require('../middleware/validator');
+const {
+  validate,
+  registerValidation,
+  loginValidation,
+  resetPasswordValidation,
+} = require('../middleware/validator');
 const { calcularEdad, generateToken } = require('../utils/helpers');
 const { authenticate } = require('../middleware/auth');
 
@@ -210,13 +215,9 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // Resetear contraseña
-router.post('/reset-password', async (req, res) => {
+router.post('/reset-password', validate(resetPasswordValidation), async (req, res) => {
   try {
     const { token, newPassword } = req.body;
-
-    if (!newPassword || newPassword.length < 8) {
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres' });
-    }
 
     const result = await query(
       'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()',

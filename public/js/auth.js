@@ -1,3 +1,62 @@
+const PASSWORD_REQUIREMENTS = [
+  { key: 'minLength', label: 'Mínimo 8 caracteres', validate: value => value.length >= 8 },
+  { key: 'uppercase', label: 'Al menos una letra mayúscula', validate: value => /[A-Z]/.test(value) },
+  { key: 'lowercase', label: 'Al menos una letra minúscula', validate: value => /[a-z]/.test(value) },
+  { key: 'number', label: 'Al menos un número', validate: value => /[0-9]/.test(value) },
+];
+
+function evaluatePassword(password = '') {
+  return PASSWORD_REQUIREMENTS.reduce((result, requirement) => {
+    result[requirement.key] = requirement.validate(password);
+    return result;
+  }, {});
+}
+
+function passwordMeetsRequirements(password = '') {
+  return Object.values(evaluatePassword(password)).every(Boolean);
+}
+
+function passwordRequirementsMarkup(id) {
+  return `
+    <div class="password-requirements" id="${id}" aria-live="polite">
+      <p>Tu contraseña debe contener:</p>
+      <ul>
+        ${PASSWORD_REQUIREMENTS.map(requirement => `
+          <li data-password-requirement="${requirement.key}">
+            <span class="password-requirement-icon" aria-hidden="true">○</span>
+            <span>${requirement.label}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+function setupPasswordRequirements(inputId, requirementsId, submitId) {
+  const input = document.getElementById(inputId);
+  const container = document.getElementById(requirementsId);
+  const submitButton = document.getElementById(submitId);
+  if (!input || !container) return;
+
+  const refresh = () => {
+    const status = evaluatePassword(input.value);
+    PASSWORD_REQUIREMENTS.forEach(requirement => {
+      const item = container.querySelector(`[data-password-requirement="${requirement.key}"]`);
+      if (!item) return;
+      const completed = status[requirement.key];
+      item.classList.toggle('is-complete', completed);
+      item.querySelector('.password-requirement-icon').textContent = completed ? '✓' : '○';
+    });
+
+    const valid = Object.values(status).every(Boolean);
+    input.setAttribute('aria-invalid', String(input.value.length > 0 && !valid));
+    if (submitButton) submitButton.disabled = !valid;
+  };
+
+  input.addEventListener('input', refresh);
+  refresh();
+}
+
 function renderLogin() {
   document.getElementById('app').innerHTML = `
     <div class="auth-container">
@@ -77,9 +136,11 @@ function renderRegister() {
             <label>Contraseña *</label>
             <div class="password-wrapper">
               <input type="password" name="password" id="regPassword" required minlength="8"
-                placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número">
+                autocomplete="new-password" aria-describedby="registerPasswordRequirements"
+                placeholder="Crea una contraseña segura">
               <button type="button" class="toggle-password" data-toggle="regPassword" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button>
             </div>
+            ${passwordRequirementsMarkup('registerPasswordRequirements')}
           </div>
           <div class="form-group">
             <label>Fecha de nacimiento *</label>
@@ -102,7 +163,7 @@ function renderRegister() {
             </div>
           </div>
           <div id="registerError"></div>
-          <button type="submit" class="btn btn-primary">Crear cuenta</button>
+          <button type="submit" class="btn btn-primary" id="btnRegister">Crear cuenta</button>
         </form>
         <div class="auth-footer">
           <p>¿Ya tienes cuenta? <button class="link-btn" data-navigate="/login">Inicia sesión</button></p>
@@ -111,9 +172,16 @@ function renderRegister() {
     </div>
   `;
 
+  setupPasswordRequirements('regPassword', 'registerPasswordRequirements', 'btnRegister');
+
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    if (!passwordMeetsRequirements(formData.get('password'))) {
+      document.getElementById('registerError').innerHTML = '<div class="alert alert-error">❌ La contraseña todavía no cumple todos los requisitos.</div>';
+      document.getElementById('regPassword').focus();
+      return;
+    }
     try {
       const data = await api('/auth/register', {
         method: 'POST',
@@ -255,19 +323,29 @@ function renderReset() {
           <div class="form-group">
             <label>Nueva contraseña</label>
             <div class="password-wrapper">
-              <input type="password" name="password" id="resetPassword" required minlength="8">
+              <input type="password" name="password" id="resetPassword" required minlength="8"
+                autocomplete="new-password" aria-describedby="resetPasswordRequirements"
+                placeholder="Crea una contraseña segura">
               <button type="button" class="toggle-password" data-toggle="resetPassword" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button>
             </div>
+            ${passwordRequirementsMarkup('resetPasswordRequirements')}
           </div>
           <div id="resetMessage"></div>
-          <button type="submit" class="btn btn-primary">Actualizar contraseña</button>
+          <button type="submit" class="btn btn-primary" id="btnResetPassword">Actualizar contraseña</button>
         </form>
       </div>
     </div>
   `;
+  setupPasswordRequirements('resetPassword', 'resetPasswordRequirements', 'btnResetPassword');
+
   document.getElementById('resetForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = new FormData(e.target).get('password');
+    if (!passwordMeetsRequirements(password)) {
+      document.getElementById('resetMessage').innerHTML = '<div class="alert alert-error">❌ La contraseña todavía no cumple todos los requisitos.</div>';
+      document.getElementById('resetPassword').focus();
+      return;
+    }
     try {
       await api('/auth/reset-password', { method: 'POST', body: { token, newPassword: password } });
       document.getElementById('resetMessage').innerHTML = `<div class="alert alert-success">✅ Contraseña actualizada. <button class="link-btn" data-navigate="/login">Iniciar sesión</button></div>`;

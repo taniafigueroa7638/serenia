@@ -1,4 +1,5 @@
 const { body, param, validationResult } = require('express-validator');
+const { passwordMeetsPolicy } = require('../utils/passwordPolicy');
 
 const validate = (validations) => {
   return async (req, res, next) => {
@@ -30,6 +31,13 @@ const registerValidation = [
 const loginValidation = [
   body('email').isEmail().normalizeEmail(),
   body('password').notEmpty(),
+];
+
+const resetPasswordValidation = [
+  body('token').notEmpty().withMessage('Token de recuperación requerido'),
+  body('newPassword')
+    .custom(passwordMeetsPolicy)
+    .withMessage('La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula y un número'),
 ];
 
 const questionnaireValidation = [
@@ -109,6 +117,7 @@ module.exports = {
   validate,
   registerValidation,
   loginValidation,
+  resetPasswordValidation,
   questionnaireValidation,
   diaryEntryValidation,
   diaryIdValidation

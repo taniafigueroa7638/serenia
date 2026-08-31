@@ -10,6 +10,12 @@ const {
   obtenerValorNumerico,
 } = require('../utils/scoring');
 const { buildQuestionnaireStatus } = require('../utils/questionnaireStatus');
+const {
+  encryptQuestionnaireData,
+  decryptQuestionnaireRow,
+  encryptAnswerData,
+  decryptAnswerRow,
+} = require('../utils/sensitiveData');
 
 const obtenerEstadoSemanal = async (userId, executeQuery = query) => {
   const result = await executeQuery(`
@@ -43,43 +49,47 @@ router.post('/', authenticate, validate(questionnaireValidation), async (req, re
     const userId = req.user.id;
     const preguntas = PREGUNTAS_POR_TIPO[tipo];
     const scores = calcularScore(respuestas, tipo);
+    const encryptedQuestionnaire = encryptQuestionnaireData({
+      estres_score: scores.estresScore ?? 0,
+      ansiedad_score: scores.ansiedadScore ?? 0,
+      estado_emocional: scores.estadoEmocional,
+      emocion_principal: scores.emocionPrincipal,
+      resultado_general: scores.resultadoGeneral,
+    }, userId);
 
     await client.query('BEGIN');
     transactionStarted = true;
     const result = await client.query(`
       INSERT INTO questionnaires (
-        user_id, estres_score, ansiedad_score, estado_emocional,
-        emocion_principal, resultado_general, tipo
+        user_id, tipo, encrypted_data
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3)
       RETURNING id
     `, [
       userId,
-      scores.estresScore ?? 0,
-      scores.ansiedadScore ?? 0,
-      scores.estadoEmocional,
-      scores.emocionPrincipal,
-      scores.resultadoGeneral,
       tipo,
+      encryptedQuestionnaire,
     ]);
 
     const questionnaireId = result.rows[0].id;
 
     for (const respuesta of respuestas) {
       const pregunta = preguntas.find((item) => item.num === respuesta.pregunta);
+      const encryptedAnswer = encryptAnswerData({
+        pregunta_texto: pregunta.texto,
+        respuesta: obtenerRespuestaTexto(pregunta, respuesta.valor),
+        valor_numerico: obtenerValorNumerico(tipo, pregunta, respuesta.valor),
+        categoria: pregunta.categoria,
+      }, questionnaireId, pregunta.num);
       await client.query(`
         INSERT INTO answers (
-          questionnaire_id, pregunta_numero, pregunta_texto,
-          respuesta, valor_numerico, categoria
+          questionnaire_id, pregunta_numero, encrypted_data
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3)
       `, [
         questionnaireId,
         pregunta.num,
-        pregunta.texto,
-        obtenerRespuestaTexto(pregunta, respuesta.valor),
-        obtenerValorNumerico(tipo, pregunta, respuesta.valor),
-        pregunta.categoria,
+        encryptedAnswer,
       ]);
     }
 
@@ -110,12 +120,13 @@ router.post('/', authenticate, validate(questionnaireValidation), async (req, re
 router.get('/history', authenticate, async (req, res) => {
   try {
     const result = await query(`
-      SELECT * FROM questionnaires
+      SELECT id, user_id, fecha, tipo, created_at, encrypted_data
+      FROM questionnaires
       WHERE user_id = $1
       ORDER BY created_at DESC
     `, [req.user.id]);
 
-    res.json({ questionnaires: result.rows });
+    res.json({ questionnaires: result.rows.map(decryptQuestionnaireRow) });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener historial' });
   }
@@ -125,21 +136,31 @@ router.get('/history', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const qResult = await query(
-      'SELECT * FROM questionnaires WHERE id = $1 AND user_id = $2',
+      `SELECT id, user_id, fecha, tipo, created_at, encrypted_data
+       FROM questionnaires
+       WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.user.id]
     );
-    const questionnaire = qResult.rows[0];
+    const encryptedQuestionnaire = qResult.rows[0];
 
-    if (!questionnaire) {
+    if (!encryptedQuestionnaire) {
       return res.status(404).json({ error: 'Cuestionario no encontrado' });
     }
 
+    const questionnaire = decryptQuestionnaireRow(encryptedQuestionnaire);
+
     const aResult = await query(
-      'SELECT * FROM answers WHERE questionnaire_id = $1 ORDER BY pregunta_numero',
+      `SELECT id, questionnaire_id, pregunta_numero, created_at, encrypted_data
+       FROM answers
+       WHERE questionnaire_id = $1
+       ORDER BY pregunta_numero`,
       [req.params.id]
     );
 
-    res.json({ questionnaire, answers: aResult.rows });
+    res.json({
+      questionnaire,
+      answers: aResult.rows.map(decryptAnswerRow),
+    });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener cuestionario' });
   }

@@ -7,10 +7,10 @@ const {
   diaryEntryValidation,
   diaryIdValidation,
 } = require('../middleware/validator');
+const { encryptDiaryData, decryptDiaryRow } = require('../utils/sensitiveData');
 
 const DIARY_FIELDS = `
-  id, titulo, contenido, fecha, emocion, permitir_chatbot,
-  created_at, updated_at
+  id, user_id, fecha, permitir_chatbot, created_at, updated_at, encrypted_data
 `;
 
 // Listar únicamente las entradas del usuario autenticado.
@@ -24,7 +24,7 @@ router.get('/', authenticate, async (req, res) => {
       LIMIT 100
     `, [req.user.id]);
 
-    res.json({ entries: result.rows });
+    res.json({ entries: result.rows.map(decryptDiaryRow) });
   } catch (err) {
     console.error('Diary list error:', err);
     res.status(500).json({ error: 'Error al obtener el diario' });
@@ -35,24 +35,23 @@ router.get('/', authenticate, async (req, res) => {
 router.post('/', authenticate, validate(diaryEntryValidation), async (req, res) => {
   try {
     const { titulo, contenido, fecha, emocion, permitirChatbot } = req.body;
+    const encryptedData = encryptDiaryData({ titulo, contenido, emocion }, req.user.id);
     const result = await query(`
       INSERT INTO diary_entries (
-        user_id, titulo, contenido, fecha, emocion, permitir_chatbot
+        user_id, fecha, permitir_chatbot, encrypted_data
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4)
       RETURNING ${DIARY_FIELDS}
     `, [
       req.user.id,
-      titulo,
-      contenido,
       fecha,
-      emocion || null,
       permitirChatbot,
+      encryptedData,
     ]);
 
     res.status(201).json({
       message: 'Entrada guardada',
-      entry: result.rows[0],
+      entry: decryptDiaryRow(result.rows[0]),
     });
   } catch (err) {
     console.error('Diary create error:', err);
@@ -69,22 +68,19 @@ router.put(
   async (req, res) => {
     try {
       const { titulo, contenido, fecha, emocion, permitirChatbot } = req.body;
+      const encryptedData = encryptDiaryData({ titulo, contenido, emocion }, req.user.id);
       const result = await query(`
         UPDATE diary_entries
-        SET titulo = $1,
-            contenido = $2,
-            fecha = $3,
-            emocion = $4,
-            permitir_chatbot = $5,
+        SET fecha = $1,
+            permitir_chatbot = $2,
+            encrypted_data = $3,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $6 AND user_id = $7
+        WHERE id = $4 AND user_id = $5
         RETURNING ${DIARY_FIELDS}
       `, [
-        titulo,
-        contenido,
         fecha,
-        emocion || null,
         permitirChatbot,
+        encryptedData,
         req.params.id,
         req.user.id,
       ]);
@@ -93,7 +89,10 @@ router.put(
         return res.status(404).json({ error: 'Entrada no encontrada' });
       }
 
-      res.json({ message: 'Entrada actualizada', entry: result.rows[0] });
+      res.json({
+        message: 'Entrada actualizada',
+        entry: decryptDiaryRow(result.rows[0]),
+      });
     } catch (err) {
       console.error('Diary update error:', err);
       res.status(500).json({ error: 'Error al actualizar la entrada' });
