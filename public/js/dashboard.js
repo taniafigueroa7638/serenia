@@ -7,7 +7,6 @@ const SERENIA_SUGGESTIONS = [
 ];
 
 let suggestionIntervalId = null;
-
 function stopSuggestionRotation() {
   if (suggestionIntervalId) {
     clearInterval(suggestionIntervalId);
@@ -20,12 +19,10 @@ function startSuggestionRotation() {
   const suggestionElement = document.getElementById('wellnessSuggestion');
   const dots = document.querySelectorAll('.suggestion-dot');
   if (!suggestionElement) return;
-
   let currentIndex = 0;
   suggestionIntervalId = setInterval(() => {
     currentIndex = (currentIndex + 1) % SERENIA_SUGGESTIONS.length;
     suggestionElement.classList.add('is-changing');
-
     setTimeout(() => {
       if (!suggestionElement.isConnected) return;
       suggestionElement.textContent = SERENIA_SUGGESTIONS[currentIndex];
@@ -36,14 +33,12 @@ function startSuggestionRotation() {
     }, 180);
   }, 5000);
 }
-
 async function renderDashboard() {
   try {
     const data = await api('/user/profile');
     const { user, stats } = data;
     const weeklyStatus = state.questionnaireStatus;
     if (!['/', '/dashboard'].includes(window.location.pathname)) return;
-
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
       <div class="dashboard container">
@@ -56,7 +51,6 @@ async function renderDashboard() {
             <button class="btn btn-primary" data-navigate="/questionnaire">Responder una evaluación</button>
           </div>
         </div>
-
         <div class="stats-grid">
           <div class="stat-card glass">
             <div class="icon">📋</div>
@@ -84,7 +78,6 @@ async function renderDashboard() {
             </div>
           </div>
         </div>
-
         <section class="wellness-tools-grid">
           <button class="wellness-tool-card diary-tool-card glass" data-navigate="/diary">
             <span class="wellness-tool-icon">📓</span>
@@ -95,7 +88,6 @@ async function renderDashboard() {
             <span class="wellness-tool-action">Escribir →</span>
           </button>
         </section>
-
         <section class="relaxation-games-section">
           <div class="section-heading">
             <div>
@@ -121,7 +113,6 @@ async function renderDashboard() {
             </button>
           </div>
         </section>
-
         ${weeklyStatus ? `
           <section class="weekly-dashboard glass">
             <div>
@@ -160,12 +151,10 @@ async function renderDashboard() {
     `;
   }
 }
-
 async function renderHistory() {
   try {
     const data = await api('/questionnaire/history');
     const cuestionarios = data.questionnaires;
-
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
       <div class="dashboard container">
@@ -214,7 +203,6 @@ async function renderHistory() {
         `}
       </div>
     `;
-
     // Bind row clicks
     document.querySelectorAll('#historyTable tbody tr').forEach(row => {
       row.addEventListener('click', () => {
@@ -226,13 +214,11 @@ async function renderHistory() {
     alert('Error: ' + err.message);
   }
 }
-
 async function verDetalleCuestionario(id) {
   try {
     const data = await api(`/questionnaire/${id}`);
     const { questionnaire, answers } = data;
     const esSerenia = questionnaire.tipo === 'serenia';
-
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
       <div class="dashboard container">
@@ -279,19 +265,17 @@ async function verDetalleCuestionario(id) {
     alert('Error: ' + err.message);
   }
 }
-
 async function renderProfile() {
   try {
     const data = await api('/user/profile');
     const { user } = data;
-
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
       <div class="dashboard container">
-        <div class="hero-section glass" style="padding:32px;">
-          <h1>👤 Mi Perfil</h1>
-        </div>
-        <div class="glass" style="padding:32px;border-radius:var(--radius);max-width:600px;">
+        <div class="glass" style="padding:32px;border-radius:var(--radius);max-width:600px;margin:0 auto;">
+          <div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(126,87,194,0.12);">
+            <h1 style="margin:0;">👤 Mi Perfil</h1>
+          </div>
           <div style="display:grid;gap:16px;">
             <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Nombre completo</span>
