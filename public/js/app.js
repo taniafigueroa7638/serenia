@@ -4,8 +4,8 @@ const state = {
   token: localStorage.getItem('serenia_token'),
   user: JSON.parse(localStorage.getItem('serenia_user') || 'null'),
   questionnaireStatus: null,
-  weeklyPromptDismissedAt: Number(sessionStorage.getItem('serenia_weekly_prompt_dismissed_at') || 0)
 };
+
 const routes = {
   '/': () => state.token ? requireAuth(renderDashboard) : renderLogin(),
   '/login': () => renderLogin(),
@@ -21,14 +21,43 @@ const routes = {
   '/history': () => requireAuth(renderHistory),
   '/profile': () => requireAuth(renderProfile),
 };
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+function weeklyPromptStorageKey() {
+  const userKey = state.user?.id || state.user?.email || 'session';
+  return `serenia_weekly_prompt_shown_at_${userKey}`;
+}
+
+function getWeeklyPromptShownAt() {
+  return Number(localStorage.getItem(weeklyPromptStorageKey()) || 0);
+}
+
+function markWeeklyPromptShown() {
+  const now = Date.now();
+  localStorage.setItem(weeklyPromptStorageKey(), String(now));
+  return now;
+}
+
 async function requireAuth(fn, enforceWeekly = true) {
-  if (!state.token) { goTo('/login'); return; }
+  if (!state.token) {
+    goTo('/login');
+    return;
+  }
+
   if (enforceWeekly) {
     try {
       const data = await api('/questionnaire/status');
       state.questionnaireStatus = data.status;
-      const dismissalIsCurrent = Date.now() - state.weeklyPromptDismissedAt < 7 * 24 * 60 * 60 * 1000;
-      if (data.status.required && !dismissalIsCurrent) {
+
+      const lastPromptAt = getWeeklyPromptShownAt();
+      const promptAlreadyShownThisWeek = Date.now() - lastPromptAt < WEEK_MS;
+
+      if (data.status.required && !promptAlreadyShownThisWeek) {
+        // El seguimiento semanal debe recordarse una vez por semana, no bloquear
+        // todas las secciones de Serenia. Marcamos el recordatorio como mostrado
+        // ANTES de abrir Evaluaciones para que el usuario pueda salir y continuar.
+        markWeeklyPromptShown();
         window.history.replaceState({}, '', '/questionnaire');
         renderQuestionnaire();
         return;
@@ -40,6 +69,7 @@ async function requireAuth(fn, enforceWeekly = true) {
       console.error('No se pudo comprobar el estado semanal:', err);
     }
   }
+
   fn();
 }
 
@@ -60,6 +90,7 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
+
 function router() {
   if (typeof stopSuggestionRotation === 'function') stopSuggestionRotation();
   if (typeof stopBubbleGame === 'function') stopBubbleGame();
@@ -69,6 +100,7 @@ function router() {
 }
 
 window.addEventListener('popstate', router);
+
 async function api(endpoint, options = {}) {
   const url = `${API_URL}/api${endpoint}`;
   const config = {
@@ -86,6 +118,7 @@ async function api(endpoint, options = {}) {
 
   const response = await fetch(url, config);
   const data = await response.json();
+
   if (!response.ok) {
     if (response.status === 401 && state.token && !endpoint.startsWith('/auth/')) {
       logout();
@@ -96,21 +129,22 @@ async function api(endpoint, options = {}) {
 
   return data;
 }
+
 function logout() {
   state.token = null;
   state.user = null;
   state.questionnaireStatus = null;
-  state.weeklyPromptDismissedAt = 0;
   localStorage.removeItem('serenia_token');
   localStorage.removeItem('serenia_user');
-  sessionStorage.removeItem('serenia_weekly_prompt_dismissed_at');
   goTo('/login');
 }
+
 function dismissWeeklyPrompt() {
-  state.weeklyPromptDismissedAt = Date.now();
-  sessionStorage.setItem('serenia_weekly_prompt_dismissed_at', String(state.weeklyPromptDismissedAt));
+  // Mantener compatibilidad con los botones "Ahora no" existentes.
+  markWeeklyPromptShown();
   goTo('/dashboard');
 }
+
 function renderNavbar() {
   if (!state.token) return '';
   return `
@@ -131,50 +165,13 @@ function renderNavbar() {
   `;
 }
 
-function arrangeDiaryActions() {
-  const form = document.getElementById('diaryForm');
-  if (!form) return;
-
-  const heading = form.querySelector('.diary-page-heading');
-  const actions = form.querySelector('.diary-form-actions');
-  const message = document.getElementById('diaryMessage');
-
-  // Los controles de guardado quedan arriba para que estén accesibles incluso
-  // cuando la entrada contiene solo unas pocas líneas.
-  if (heading && actions && heading.nextElementSibling !== actions) {
-    heading.insertAdjacentElement('afterend', actions);
-  }
-  if (actions) {
-    actions.style.marginTop = '0';
-    actions.style.marginBottom = '18px';
-  }
-
-  // El resultado del guardado debe quedar visible junto a los botones.
-  if (actions && message && actions.nextElementSibling !== message) {
-    actions.insertAdjacentElement('afterend', message);
-  }
-  if (message) {
-    message.style.marginTop = '0';
-    message.style.marginBottom = '12px';
-  }
-
-  // El chatbot ya está disponible, por lo que evitamos el texto futuro antiguo.
-  const privacyHint = form.querySelector('.diary-privacy-control small');
-  if (privacyHint) {
-    privacyHint.textContent = 'Serenia solo podrá consultar esta entrada si activas este permiso.';
-  }
-}
-
 // Íconos SVG del toggle de contraseña (heredan color vía currentColor)
 const ICON_EYE = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.25"/></svg>`;
 const ICON_EYE_OFF = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a13.2 13.2 0 0 1-3.15 4.05M6.6 6.6C3.4 8.6 1.5 12 1.5 12s3.5 7 10.5 7a10.2 10.2 0 0 0 4.4-.95"/><path d="M9.9 10.05A3.25 3.25 0 0 0 12 15.25a3.24 3.24 0 0 0 2.15-.8"/></svg>`;
-// Auto-bind events after DOM changes. Este es el ÚNICO punto donde se registran los
-// listeners de [data-navigate] y [data-toggle] en toda la app (antes había un segundo
-// registro manual en auth.js que duplicaba el listener del ojo y hacía que el toggle
-// se cancelara a sí mismo al hacer clic).
-function bindAllEvents() {
-  arrangeDiaryActions();
 
+// Auto-bind events after DOM changes. Este es el ÚNICO punto donde se registran los
+// listeners de [data-navigate] y [data-toggle] en toda la app.
+function bindAllEvents() {
   // Navigation links [data-navigate]
   document.querySelectorAll('[data-navigate]').forEach(el => {
     if (el._bound) return;
@@ -184,23 +181,28 @@ function bindAllEvents() {
       goTo(el.dataset.navigate);
     });
   });
+
   // Logout button
   const logoutBtn = document.getElementById('navLogout');
   if (logoutBtn && !logoutBtn._bound) {
     logoutBtn._bound = true;
     logoutBtn.addEventListener('click', logout);
   }
+
   // Password toggles [data-toggle]
   document.querySelectorAll('[data-toggle]').forEach(btn => {
     if (btn._bound) return;
     btn._bound = true;
+
     // Estado inicial del ícono (ojo abierto = contraseña oculta)
     if (!btn.querySelector('svg')) btn.innerHTML = ICON_EYE;
+
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const inputId = btn.dataset.toggle;
       const input = document.getElementById(inputId);
       if (!input) return;
+
       if (input.type === 'password') {
         input.type = 'text';
         btn.innerHTML = ICON_EYE_OFF;
@@ -215,6 +217,7 @@ function bindAllEvents() {
     });
   });
 }
+
 // Watch for DOM changes and auto-bind
 const observer = new MutationObserver(bindAllEvents);
 
