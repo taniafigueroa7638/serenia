@@ -1,14 +1,16 @@
 .chat-page {
   padding-top: 96px;
   padding-bottom: 36px;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .chat-shell {
   display: grid;
   grid-template-columns: 310px minmax(0, 1fr);
-  min-height: calc(100vh - 132px);
-  max-height: calc(100vh - 132px);
+  height: calc(100dvh - 132px);
+  min-height: 0;
   overflow: hidden;
   border-radius: var(--radius);
 }
@@ -132,9 +134,12 @@
 .chat-error-inline { color: #b23c3c; font-size: 12px; }
 
 .chat-main {
+  position: relative;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.5);
 }
 
@@ -163,12 +168,33 @@
 .chat-notice-card .btn { width: auto; padding: 10px 15px; font-size: 13px; }
 
 .chat-messages {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 87, 194, 0.48) rgba(126, 87, 194, 0.07);
   padding: 24px clamp(16px, 5vw, 64px);
   display: flex;
   flex-direction: column;
   gap: 15px;
+  scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar { width: 10px; }
+.chat-messages::-webkit-scrollbar-track { background: rgba(126, 87, 194, 0.07); }
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(126, 87, 194, 0.42);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.chat-messages::-webkit-scrollbar-thumb:hover { background: rgba(94, 53, 177, 0.62); background-clip: padding-box; }
+.chat-messages:focus-visible {
+  outline: 2px solid rgba(126, 87, 194, 0.38);
+  outline-offset: -2px;
 }
 
 .chat-message {
@@ -211,6 +237,48 @@
 }
 .chat-message.is-error .chat-bubble { border-color: rgba(229, 115, 115, 0.35); color: #9f3434; }
 .chat-message.is-typing .chat-bubble { color: var(--text-light); min-width: 44px; text-align: center; }
+
+.chat-scroll-controls {
+  position: absolute;
+  right: 14px;
+  bottom: 88px;
+  z-index: 5;
+  display: grid;
+  gap: 7px;
+}
+
+.chat-scroll-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(126, 87, 194, 0.18);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--primary-dark);
+  box-shadow: 0 5px 18px rgba(70, 45, 110, 0.12);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.chat-scroll-btn svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.chat-scroll-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(126, 87, 194, 0.38);
+  background: white;
+}
+.chat-scroll-btn:disabled {
+  opacity: 0.28;
+  cursor: default;
+  box-shadow: none;
+}
 
 .chat-composer {
   margin: 0 clamp(16px, 5vw, 64px) 8px;
@@ -259,19 +327,24 @@
 }
 
 @media (max-width: 900px) {
-  .chat-page { padding: 82px 0 0; }
+  .chat-page {
+    padding: 82px 0 0;
+    height: 100dvh;
+    min-height: 0;
+  }
   .chat-shell {
     grid-template-columns: 1fr;
-    min-height: calc(100vh - 82px);
-    max-height: none;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: calc(100dvh - 82px);
+    min-height: 0;
     border-radius: 0;
   }
   .chat-sidebar {
     border-right: 0;
     border-bottom: 1px solid rgba(126, 87, 194, 0.12);
-    max-height: 330px;
+    max-height: 280px;
   }
-  .chat-main { min-height: 650px; }
+  .chat-main { min-height: 0; }
 }
 
 @media (max-width: 600px) {
@@ -282,4 +355,83 @@
   .chat-avatar { display: none; }
   .chat-notice-card { margin: 12px 12px 0; grid-template-columns: 1fr; }
   .chat-notice-icon { display: none; }
+  .chat-scroll-controls { right: 8px; bottom: 84px; }
+  .chat-scroll-btn { width: 34px; height: 34px; }
+}
+
+/* Acceso global flotante a Serenia IA */
+.serenia-ai-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1200;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(126, 87, 194, 0.2);
+  box-shadow: 0 12px 32px rgba(70, 45, 110, 0.24);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.serenia-ai-fab:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 16px 38px rgba(70, 45, 110, 0.3);
+  border-color: rgba(126, 87, 194, 0.42);
+}
+.serenia-ai-fab:active { transform: scale(0.97); }
+.serenia-ai-fab:focus-visible {
+  outline: 3px solid rgba(126, 87, 194, 0.28);
+  outline-offset: 3px;
+}
+.serenia-ai-fab.is-active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(126, 87, 194, 0.1), 0 12px 32px rgba(70, 45, 110, 0.24);
+}
+.serenia-ai-fab-logo {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: block;
+}
+.serenia-ai-fab-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.serenia-ai-fab-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 27px;
+  height: 21px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  line-height: 1;
+  box-shadow: 0 3px 9px rgba(70, 45, 110, 0.22);
+}
+
+@media (max-width: 600px) {
+  .serenia-ai-fab {
+    right: 16px;
+    bottom: 16px;
+    width: 58px;
+    height: 58px;
+  }
+  .serenia-ai-fab-logo { width: 47px; height: 47px; }
+  .serenia-ai-fab-badge { top: -6px; right: -6px; }
+  .serenia-ai-fab.is-active { bottom: 92px; }
 }

@@ -123,12 +123,21 @@ function renderNavbar() {
         <a href="/dashboard" data-navigate="/dashboard">Inicio</a>
         <a href="/questionnaire" data-navigate="/questionnaire">Evaluaciones</a>
         <a href="/diary" data-navigate="/diary">Diario</a>
-        <a href="/chat" data-navigate="/chat">Serenia IA</a>
         <a href="/history" data-navigate="/history">Historial</a>
         <a href="/profile" data-navigate="/profile">Perfil</a>
         <button id="navLogout">Cerrar sesión</button>
       </div>
     </nav>
+    <a href="/chat"
+       class="serenia-ai-fab ${window.location.pathname === '/chat' ? 'is-active' : ''}"
+       data-navigate="/chat"
+       aria-label="Abrir Serenia IA"
+       title="Abrir Serenia IA">
+      <span class="serenia-ai-fab-logo">
+        <img src="/assets/logo.jpg" alt="">
+        <span class="serenia-ai-fab-badge" aria-hidden="true">IA</span>
+      </span>
+    </a>
   `;
 }
 // Íconos SVG del toggle de contraseña (heredan color vía currentColor)
