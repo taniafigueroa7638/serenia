@@ -9,7 +9,8 @@ const { decryptQuestionnaireRow } = require('../utils/sensitiveData');
 router.get('/profile', authenticate, async (req, res) => {
   try {
     const userResult = await query(`
-      SELECT id, nombre, apellido, email, fecha_nacimiento,
+      SELECT id, nombre, apellido, email,
+             TO_CHAR(fecha_nacimiento, 'YYYY-MM-DD') AS fecha_nacimiento,
              EXTRACT(YEAR FROM age(CURRENT_DATE, fecha_nacimiento))::INTEGER AS edad,
              telefono, sexo, pais, created_at
       FROM users WHERE id = $1

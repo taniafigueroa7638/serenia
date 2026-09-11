@@ -130,13 +130,13 @@ function renderChatPreferences() {
 
   root.innerHTML = `
     <div class="chat-preferences-title">Privacidad y contexto</div>
-    <label class="chat-toggle-row">
+    <div class="chat-toggle-row" style="cursor:default;">
       <span>
-        <strong>Usar perfil básico</strong>
-        <small>Comparte con la IA solo edad, sexo y país. Nunca nombre, email ni teléfono.</small>
+        <strong>Perfil completo</strong>
+        <small>Serenia IA usa automáticamente los datos de tu perfil para personalizar las respuestas, incluido tu país para recursos locales.</small>
       </span>
-      <input type="checkbox" id="chatUseProfile" ${p.usarPerfil ? 'checked' : ''}>
-    </label>
+      <strong style="color:var(--primary);font-size:11px;white-space:nowrap;">Activo</strong>
+    </div>
     <label class="chat-toggle-row">
       <span>
         <strong>Usar evaluaciones</strong>
@@ -160,7 +160,7 @@ function renderChatPreferences() {
     </label>
   `;
 
-  ['chatUseProfile', 'chatUseEvaluations', 'chatUseDiary', 'chatSaveHistory'].forEach((id) => {
+  ['chatUseEvaluations', 'chatUseDiary', 'chatSaveHistory'].forEach((id) => {
     document.getElementById(id)?.addEventListener('change', saveChatPreferences);
   });
 }
@@ -168,7 +168,6 @@ function renderChatPreferences() {
 async function saveChatPreferences() {
   const previousSaveHistory = chatState.preferences?.guardarHistorial;
   const body = {
-    usarPerfil: Boolean(document.getElementById('chatUseProfile')?.checked),
     usarEvaluaciones: Boolean(document.getElementById('chatUseEvaluations')?.checked),
     usarDiario: Boolean(document.getElementById('chatUseDiary')?.checked),
     guardarHistorial: Boolean(document.getElementById('chatSaveHistory')?.checked),
@@ -202,7 +201,7 @@ function renderChatNotice() {
       <div class="chat-notice-icon">✦</div>
       <div>
         <h2>Antes de comenzar</h2>
-        <p>Serenia IA es una herramienta de acompañamiento y orientación general. No realiza diagnósticos ni sustituye psicoterapia, atención médica o servicios de emergencia. Sus respuestas pueden contener errores.</p>
+        <p>Serenia IA es una herramienta de acompañamiento y orientación general. Para personalizar la conversación utiliza los datos de tu perfil; el diario y las evaluaciones solo se usan si los autorizas. No realiza diagnósticos ni sustituye psicoterapia, atención médica o servicios de emergencia. Sus respuestas pueden contener errores.</p>
         <button id="acceptChatNotice" class="btn btn-primary" type="button">Entiendo y quiero continuar</button>
       </div>
     </div>

@@ -6,6 +6,13 @@ const SERENIA_SUGGESTIONS = [
   'Dedica unos minutos a realizar una actividad que disfrutes.',
 ];
 
+function formatDateOnly(value) {
+  if (!value) return 'No especificada';
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return String(value);
+  return `${match[3]}/${match[2]}/${match[1]}`;
+}
+
 let suggestionIntervalId = null;
 function stopSuggestionRotation() {
   if (suggestionIntervalId) {
@@ -309,7 +316,7 @@ async function renderProfile() {
             </div>
             <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Fecha de nacimiento</span>
-              <strong>${user.fecha_nacimiento ? new Date(user.fecha_nacimiento).toLocaleDateString('es-ES') : 'No especificada'}</strong>
+              <strong>${formatDateOnly(user.fecha_nacimiento)}</strong>
             </div>
             <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Teléfono</span>

@@ -32,7 +32,6 @@ function publicPreferences(row) {
   return {
     usarDiario: row.usar_diario,
     usarEvaluaciones: row.usar_evaluaciones,
-    usarPerfil: row.usar_perfil,
     guardarHistorial: row.guardar_historial,
     avisoAceptado: Boolean(row.aviso_aceptado_at),
     avisoAceptadoAt: row.aviso_aceptado_at,
@@ -192,7 +191,6 @@ router.put('/preferences', authenticate, async (req, res) => {
     const current = await getOrCreatePreferences(req.user.id);
     const usarDiario = parseBoolean(req.body.usarDiario, current.usar_diario);
     const usarEvaluaciones = parseBoolean(req.body.usarEvaluaciones, current.usar_evaluaciones);
-    const usarPerfil = parseBoolean(req.body.usarPerfil, current.usar_perfil);
     const guardarHistorial = parseBoolean(req.body.guardarHistorial, current.guardar_historial);
     const acceptNotice = req.body.acceptNotice === true;
 
@@ -200,17 +198,16 @@ router.put('/preferences', authenticate, async (req, res) => {
       UPDATE chat_preferences
       SET usar_diario = $2,
           usar_evaluaciones = $3,
-          usar_perfil = $4,
-          guardar_historial = $5,
+          guardar_historial = $4,
           aviso_aceptado_at = CASE
-            WHEN $6 THEN COALESCE(aviso_aceptado_at, CURRENT_TIMESTAMP)
+            WHEN $5 THEN COALESCE(aviso_aceptado_at, CURRENT_TIMESTAMP)
             ELSE aviso_aceptado_at
           END,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $1
-      RETURNING user_id, usar_diario, usar_evaluaciones, usar_perfil, guardar_historial,
+      RETURNING user_id, usar_diario, usar_evaluaciones, guardar_historial,
                 aviso_aceptado_at, created_at, updated_at
-    `, [req.user.id, usarDiario, usarEvaluaciones, usarPerfil, guardarHistorial, acceptNotice]);
+    `, [req.user.id, usarDiario, usarEvaluaciones, guardarHistorial, acceptNotice]);
 
     res.json({ preferences: publicPreferences(result.rows[0]) });
   } catch (err) {
