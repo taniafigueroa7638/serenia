@@ -9,9 +9,9 @@ const DIARY_MOODS = [
   { value: 'triste', label: 'Triste', emoji: '😢' },
   { value: 'cansado', label: 'Cansado/a', emoji: '😴' },
 ];
-
 let diaryEntries = [];
 let activeDiaryId = null;
+let isCreatingDiaryEntry = false;
 
 function getLocalDateValue() {
   const now = new Date();
@@ -36,6 +36,9 @@ function formatDiaryDate(value) {
 }
 
 async function renderDiary() {
+  activeDiaryId = null;
+  isCreatingDiaryEntry = false;
+
   document.getElementById('app').innerHTML = `
     ${renderNavbar()}
     <main class="diary-container container">
@@ -45,7 +48,6 @@ async function renderDiary() {
       </div>
     </main>
   `;
-
   try {
     await loadDiaryEntries();
   } catch (err) {
@@ -70,10 +72,13 @@ async function loadDiaryEntries(preferredId = null) {
 
   if (preferredId && diaryEntries.some((entry) => entry.id === preferredId)) {
     activeDiaryId = preferredId;
+    isCreatingDiaryEntry = false;
   } else if (activeDiaryId && diaryEntries.some((entry) => entry.id === activeDiaryId)) {
     // Conserva la entrada que el usuario estaba viendo.
-  } else {
-    activeDiaryId = diaryEntries[0]?.id || null;
+  } else if (!isCreatingDiaryEntry) {
+    // Al entrar al diario no abrimos una nota automáticamente.
+    // Los botones Guardar/Eliminar aparecen solo al abrir una nota o crear una nueva.
+    activeDiaryId = null;
   }
 
   renderDiaryWorkspace();
@@ -81,6 +86,7 @@ async function loadDiaryEntries(preferredId = null) {
 
 function renderDiaryWorkspace() {
   const activeEntry = diaryEntries.find((entry) => entry.id === activeDiaryId) || null;
+  const editorOpen = Boolean(activeEntry || isCreatingDiaryEntry);
   const dateValue = activeEntry ? String(activeEntry.fecha).slice(0, 10) : getLocalDateValue();
   const moodValue = activeEntry?.emocion || '';
 
@@ -93,9 +99,33 @@ function renderDiaryWorkspace() {
           <h1>📓 Mi diario</h1>
           <p>Escribe con libertad. Tus entradas son privadas.</p>
         </div>
-        <button class="btn btn-primary diary-new-button" id="btnNewDiaryEntry">+ Nueva entrada</button>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
+          ${editorOpen && activeEntry ? `
+            <button
+              type="button"
+              class="btn diary-delete-button"
+              id="btnDeleteDiaryEntry"
+              style="width:auto;min-width:110px;padding:12px 18px;"
+            >Eliminar</button>
+          ` : ''}
+          ${editorOpen ? `
+            <button
+              type="submit"
+              form="diaryForm"
+              class="btn btn-primary"
+              id="btnSaveDiaryEntry"
+              style="width:auto;min-width:160px;padding:12px 18px;"
+            >${activeEntry ? 'Guardar cambios' : 'Guardar entrada'}</button>
+          ` : ''}
+          <button
+            class="btn btn-primary diary-new-button"
+            id="btnNewDiaryEntry"
+            type="button"
+            style="width:auto;"
+          >+ Nueva entrada</button>
+        </div>
       </header>
-
+      <div id="diaryMessage" aria-live="polite"></div>
       <div class="diary-notebook glass">
         <div class="diary-spiral" aria-hidden="true"></div>
         <aside class="diary-index">
@@ -107,70 +137,68 @@ function renderDiaryWorkspace() {
             ${renderDiaryEntryList(diaryEntries)}
           </div>
         </aside>
-
         <section class="diary-page">
-          <form id="diaryForm" data-entry-id="${activeEntry?.id || ''}">
-            <div class="diary-page-heading">
-              <input
-                class="diary-title-input"
-                name="titulo"
-                maxlength="100"
-                required
-                placeholder="Título de esta página"
-                value="${escapeHtml(activeEntry?.titulo || '')}"
-              >
-              <div class="diary-meta-fields">
-                <label>
-                  <span>Fecha</span>
-                  <input type="date" name="fecha" required value="${dateValue}">
-                </label>
-                <label>
-                  <span>¿Cómo te sentías?</span>
-                  <select name="emocion">
-                    ${DIARY_MOODS.map((mood) => `
-                      <option value="${mood.value}" ${mood.value === moodValue ? 'selected' : ''}>
-                        ${mood.emoji} ${mood.label}
-                      </option>
-                    `).join('')}
-                  </select>
-                </label>
+          ${editorOpen ? `
+            <form id="diaryForm" data-entry-id="${activeEntry?.id || ''}">
+              <div class="diary-page-heading">
+                <input
+                  class="diary-title-input"
+                  name="titulo"
+                  maxlength="100"
+                  required
+                  placeholder="Título de esta página"
+                  value="${escapeHtml(activeEntry?.titulo || '')}"
+                >
+                <div class="diary-meta-fields">
+                  <label>
+                    <span>Fecha</span>
+                    <input type="date" name="fecha" required value="${dateValue}">
+                  </label>
+                  <label>
+                    <span>¿Cómo te sentías?</span>
+                    <select name="emocion">
+                      ${DIARY_MOODS.map((mood) => `
+                        <option value="${mood.value}" ${mood.value === moodValue ? 'selected' : ''}>
+                          ${mood.emoji} ${mood.label}
+                        </option>
+                      `).join('')}
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <label class="diary-writing-area">
+                <span class="sr-only">Contenido de la entrada</span>
+                <textarea
+                  name="contenido"
+                  id="diaryContent"
+                  maxlength="8000"
+                  required
+                  placeholder="Hoy quiero escribir sobre..."
+                >${escapeHtml(activeEntry?.contenido || '')}</textarea>
+              </label>
+              <div class="diary-character-count"><span id="diaryCharCount">${activeEntry?.contenido?.length || 0}</span>/8000</div>
+              <label class="diary-privacy-control">
+                <input type="checkbox" name="permitirChatbot" ${activeEntry?.permitir_chatbot ? 'checked' : ''}>
+                <span class="diary-privacy-switch" aria-hidden="true"></span>
+                <span>
+                  <strong>Permitir acceso a Serenia IA</strong>
+                  <small>Serenia IA solo podrá consultar esta entrada si activas este permiso.</small>
+                </span>
+              </label>
+            </form>
+          ` : `
+            <div style="min-height:520px;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;">
+              <div style="max-width:380px;">
+                <div style="font-size:48px;margin-bottom:14px;">📖</div>
+                <h2 style="color:var(--primary-dark);margin-bottom:8px;">Abre una página de tu diario</h2>
+                <p style="color:var(--text-light);">Selecciona una entrada de la lista o pulsa <strong>+ Nueva entrada</strong> para empezar a escribir.</p>
               </div>
             </div>
-
-            <label class="diary-writing-area">
-              <span class="sr-only">Contenido de la entrada</span>
-              <textarea
-                name="contenido"
-                id="diaryContent"
-                maxlength="8000"
-                required
-                placeholder="Hoy quiero escribir sobre..."
-              >${escapeHtml(activeEntry?.contenido || '')}</textarea>
-            </label>
-            <div class="diary-character-count"><span id="diaryCharCount">${activeEntry?.contenido?.length || 0}</span>/8000</div>
-
-            <label class="diary-privacy-control">
-              <input type="checkbox" name="permitirChatbot" ${activeEntry?.permitir_chatbot ? 'checked' : ''}>
-              <span class="diary-privacy-switch" aria-hidden="true"></span>
-              <span>
-                <strong>Permitir acceso a “Habla con Serenia”</strong>
-                <small>Cuando incorporemos el chatbot, solo podrá consultar esta entrada si activas este permiso.</small>
-              </span>
-            </label>
-
-            <div id="diaryMessage" aria-live="polite"></div>
-            <div class="diary-form-actions">
-              ${activeEntry ? '<button type="button" class="btn diary-delete-button" id="btnDeleteDiaryEntry">Eliminar</button>' : '<span></span>'}
-              <button type="submit" class="btn btn-primary" id="btnSaveDiaryEntry">
-                ${activeEntry ? 'Guardar cambios' : 'Guardar entrada'}
-              </button>
-            </div>
-          </form>
+          `}
         </section>
       </div>
     </main>
   `;
-
   bindDiaryEvents();
 }
 
@@ -184,7 +212,6 @@ function renderDiaryEntryList(entries) {
       </div>
     `;
   }
-
   return entries.map((entry) => {
     const mood = getDiaryMood(entry.emocion);
     const preview = entry.contenido.replace(/\s+/g, ' ').trim().slice(0, 90);
@@ -197,7 +224,7 @@ function renderDiaryEntryList(entries) {
         <span class="diary-entry-preview">${escapeHtml(preview)}${entry.contenido.length > 90 ? '…' : ''}</span>
         <span class="diary-entry-footer">
           <time>${formatDiaryDate(entry.fecha)}</time>
-          <span title="${entry.permitir_chatbot ? 'Chatbot autorizado' : 'Entrada privada'}">
+          <span title="${entry.permitir_chatbot ? 'Serenia IA autorizada' : 'Entrada privada'}">
             ${entry.permitir_chatbot ? '🔓' : '🔒'}
           </span>
         </span>
@@ -210,6 +237,7 @@ function bindDiaryEntryButtons() {
   document.querySelectorAll('.diary-entry-item').forEach((button) => {
     button.addEventListener('click', () => {
       activeDiaryId = Number.parseInt(button.dataset.entryId, 10);
+      isCreatingDiaryEntry = false;
       renderDiaryWorkspace();
     });
   });
@@ -218,13 +246,14 @@ function bindDiaryEntryButtons() {
 function bindDiaryEvents() {
   bindDiaryEntryButtons();
 
-  document.getElementById('btnNewDiaryEntry').addEventListener('click', () => {
+  document.getElementById('btnNewDiaryEntry')?.addEventListener('click', () => {
     activeDiaryId = null;
+    isCreatingDiaryEntry = true;
     renderDiaryWorkspace();
     document.querySelector('.diary-title-input')?.focus();
   });
 
-  document.getElementById('diarySearch').addEventListener('input', (event) => {
+  document.getElementById('diarySearch')?.addEventListener('input', (event) => {
     const term = event.target.value.trim().toLocaleLowerCase('es');
     const filteredEntries = diaryEntries.filter((entry) => {
       const mood = getDiaryMood(entry.emocion);
@@ -236,11 +265,11 @@ function bindDiaryEvents() {
   });
 
   const content = document.getElementById('diaryContent');
-  content.addEventListener('input', () => {
+  content?.addEventListener('input', () => {
     document.getElementById('diaryCharCount').textContent = content.value.length;
   });
 
-  document.getElementById('diaryForm').addEventListener('submit', saveDiaryEntry);
+  document.getElementById('diaryForm')?.addEventListener('submit', saveDiaryEntry);
   document.getElementById('btnDeleteDiaryEntry')?.addEventListener('click', deleteDiaryEntry);
 }
 
@@ -257,18 +286,18 @@ async function saveDiaryEntry(event) {
     permitirChatbot: formData.get('permitirChatbot') === 'on',
   };
   const saveButton = document.getElementById('btnSaveDiaryEntry');
-  saveButton.disabled = true;
-
+  if (saveButton) saveButton.disabled = true;
   try {
     const data = await api(entryId ? `/diary/${entryId}` : '/diary', {
       method: entryId ? 'PUT' : 'POST',
       body: payload,
     });
+    isCreatingDiaryEntry = false;
     await loadDiaryEntries(data.entry.id);
     showDiaryMessage('✓ Tu entrada está guardada.', 'success');
   } catch (err) {
     showDiaryMessage(err.message, 'error');
-    saveButton.disabled = false;
+    if (saveButton) saveButton.disabled = false;
   }
 }
 
@@ -277,10 +306,10 @@ async function deleteDiaryEntry() {
   const entry = diaryEntries.find((item) => item.id === activeDiaryId);
   const confirmed = window.confirm(`¿Eliminar “${entry?.titulo || 'esta entrada'}”? Esta acción no se puede deshacer.`);
   if (!confirmed) return;
-
   try {
     await api(`/diary/${activeDiaryId}`, { method: 'DELETE' });
     activeDiaryId = null;
+    isCreatingDiaryEntry = false;
     await loadDiaryEntries();
     showDiaryMessage('Entrada eliminada.', 'success');
   } catch (err) {
