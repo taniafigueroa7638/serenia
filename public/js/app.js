@@ -128,18 +128,43 @@ function renderNavbar() {
         <button id="navLogout">Cerrar sesión</button>
       </div>
     </nav>
-    <a href="/chat"
-       class="serenia-ai-fab ${window.location.pathname === '/chat' ? 'is-active' : ''}"
-       data-navigate="/chat"
-       aria-label="Abrir Serenia IA"
-       title="Abrir Serenia IA">
-      <span class="serenia-ai-fab-logo">
-        <img src="/assets/logo.jpg" alt="">
-        <span class="serenia-ai-fab-badge" aria-hidden="true">IA</span>
-      </span>
-    </a>
   `;
 }
+
+function arrangeDiaryActions() {
+  const form = document.getElementById('diaryForm');
+  if (!form) return;
+
+  const heading = form.querySelector('.diary-page-heading');
+  const actions = form.querySelector('.diary-form-actions');
+  const message = document.getElementById('diaryMessage');
+
+  // Los controles de guardado quedan arriba para que estén accesibles incluso
+  // cuando la entrada contiene solo unas pocas líneas.
+  if (heading && actions && heading.nextElementSibling !== actions) {
+    heading.insertAdjacentElement('afterend', actions);
+  }
+  if (actions) {
+    actions.style.marginTop = '0';
+    actions.style.marginBottom = '18px';
+  }
+
+  // El resultado del guardado debe quedar visible junto a los botones.
+  if (actions && message && actions.nextElementSibling !== message) {
+    actions.insertAdjacentElement('afterend', message);
+  }
+  if (message) {
+    message.style.marginTop = '0';
+    message.style.marginBottom = '12px';
+  }
+
+  // El chatbot ya está disponible, por lo que evitamos el texto futuro antiguo.
+  const privacyHint = form.querySelector('.diary-privacy-control small');
+  if (privacyHint) {
+    privacyHint.textContent = 'Serenia solo podrá consultar esta entrada si activas este permiso.';
+  }
+}
+
 // Íconos SVG del toggle de contraseña (heredan color vía currentColor)
 const ICON_EYE = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.25"/></svg>`;
 const ICON_EYE_OFF = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a13.2 13.2 0 0 1-3.15 4.05M6.6 6.6C3.4 8.6 1.5 12 1.5 12s3.5 7 10.5 7a10.2 10.2 0 0 0 4.4-.95"/><path d="M9.9 10.05A3.25 3.25 0 0 0 12 15.25a3.24 3.24 0 0 0 2.15-.8"/></svg>`;
@@ -148,6 +173,8 @@ const ICON_EYE_OFF = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none
 // registro manual en auth.js que duplicaba el listener del ojo y hacía que el toggle
 // se cancelara a sí mismo al hacer clic).
 function bindAllEvents() {
+  arrangeDiaryActions();
+
   // Navigation links [data-navigate]
   document.querySelectorAll('[data-navigate]').forEach(el => {
     if (el._bound) return;

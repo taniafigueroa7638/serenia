@@ -87,6 +87,18 @@ async function renderDashboard() {
             </span>
             <span class="wellness-tool-action">Escribir →</span>
           </button>
+
+          <button class="wellness-tool-card serenIA-tool-card glass" data-navigate="/chat">
+            <span class="wellness-tool-icon" style="position:relative;width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 52px;">
+              <img src="/assets/logo.jpg" alt="" style="width:48px;height:48px;border-radius:14px;object-fit:cover;box-shadow:0 5px 14px rgba(126,87,194,.18);">
+              <span aria-hidden="true" style="position:absolute;top:-7px;right:-9px;min-width:25px;height:20px;padding:0 6px;display:flex;align-items:center;justify-content:center;border:2px solid white;border-radius:999px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;font-size:10px;font-weight:800;line-height:1;box-shadow:0 3px 8px rgba(94,53,177,.24);">IA</span>
+            </span>
+            <span class="wellness-tool-content">
+              <strong>Habla con Serenia</strong>
+              <small>Conversa con Serenia IA para organizar tus pensamientos y recibir orientación de bienestar usando solo la información que tú autorices.</small>
+            </span>
+            <span class="wellness-tool-action">Conversar →</span>
+          </button>
         </section>
         <section class="relaxation-games-section">
           <div class="section-heading">
@@ -136,7 +148,6 @@ async function renderDashboard() {
           </section>
         ` : ''}
       </div>
-      <button class="fab" data-navigate="/questionnaire" title="Nuevo cuestionario">+</button>
     `;
     startSuggestionRotation();
   } catch (err) {
