@@ -1,363 +1,450 @@
-let chatState = {
-  preferences: null,
-  conversationId: null,
-  ephemeralHistory: [],
-  loading: false,
-};
+const express = require('express');
+const router = express.Router();
+const { query, pool } = require('../models');
+const { authenticate } = require('../middleware/auth');
+const { chatLimiter } = require('../middleware/chatRateLimiter');
+const {
+  encryptChatMessage,
+  decryptChatMessageRow,
+} = require('../utils/chatData');
+const {
+  getOrCreatePreferences,
+  buildAuthorizedContext,
+  contextToSystemText,
+} = require('../services/chatContext');
+const {
+  detectImmediateRisk,
+  buildImmediateSupportResponse,
+  buildSystemPrompt,
+} = require('../utils/chatSafety');
+const { generateChatResponse } = require('../services/ai');
 
-function formatChatDate(value) {
-  if (!value) return 'Conversación';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Conversación';
-  return new Intl.DateTimeFormat('es-EC', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+const MAX_MESSAGE_CHARS = 2000;
+const MAX_HISTORY_MESSAGES = 12;
+const DEFAULT_DAILY_LIMIT = 40;
+
+function getDailyLimit() {
+  const value = Number(process.env.AI_DAILY_USER_LIMIT || DEFAULT_DAILY_LIMIT);
+  return Number.isInteger(value) && value > 0 ? value : DEFAULT_DAILY_LIMIT;
 }
 
-async function renderChat() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    ${renderNavbar()}
-    <main class="chat-page container">
-      <section class="chat-shell glass">
-        <aside class="chat-sidebar">
-          <div class="chat-sidebar-header">
-            <div>
-              <span class="chat-eyebrow">Acompañamiento</span>
-              <h1>Serenia IA</h1>
-            </div>
-            <button class="chat-icon-btn" id="newChatBtn" type="button" title="Nueva conversación" aria-label="Nueva conversación">＋</button>
-          </div>
-
-          <div id="chatPreferences" class="chat-preferences"></div>
-
-          <div class="chat-history-title">Conversaciones guardadas</div>
-          <div id="chatConversationList" class="chat-conversation-list">
-            <div class="chat-muted">Cargando…</div>
-          </div>
-        </aside>
-
-        <section class="chat-main">
-          <div id="chatNotice"></div>
-          <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
-          <form id="chatForm" class="chat-composer">
-            <textarea id="chatInput" maxlength="2000" rows="1" placeholder="Escribe lo que quieras conversar…" aria-label="Mensaje para Serenia IA"></textarea>
-            <button id="chatSendBtn" class="chat-send-btn" type="submit">Enviar</button>
-          </form>
-          <div class="chat-disclaimer">Serenia IA ofrece orientación general y puede equivocarse. No sustituye atención profesional ni servicios de emergencia.</div>
-        </section>
-      </section>
-    </main>
-  `;
-
-  chatState = {
-    preferences: null,
-    conversationId: null,
-    ephemeralHistory: [],
-    loading: false,
+function publicPreferences(row) {
+  return {
+    usarDiario: row.usar_diario,
+    usarEvaluaciones: row.usar_evaluaciones,
+    guardarHistorial: row.guardar_historial,
+    avisoAceptado: Boolean(row.aviso_aceptado_at),
+    avisoAceptadoAt: row.aviso_aceptado_at,
   };
-
-  bindChatEvents();
-  await loadChatPreferences();
-  await loadChatConversations();
-  renderWelcomeMessage();
 }
 
-function bindChatEvents() {
-  document.getElementById('newChatBtn')?.addEventListener('click', startNewChat);
-  document.getElementById('chatForm')?.addEventListener('submit', sendChatMessage);
+function parseBoolean(value, fallback) {
+  return typeof value === 'boolean' ? value : fallback;
+}
 
-  const input = document.getElementById('chatInput');
-  input?.addEventListener('input', () => {
-    input.style.height = 'auto';
-    input.style.height = `${Math.min(input.scrollHeight, 150)}px`;
-  });
-  input?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      document.getElementById('chatForm')?.requestSubmit();
+function validateClientHistory(history) {
+  if (history == null) return [];
+  if (!Array.isArray(history)) throw new Error('El historial temporal es inválido');
+  if (history.length > MAX_HISTORY_MESSAGES) throw new Error('El historial temporal es demasiado largo');
+
+  return history.map((item) => {
+    const role = item?.role;
+    const content = typeof item?.content === 'string' ? item.content.trim() : '';
+    if (!['user', 'assistant'].includes(role) || !content || content.length > MAX_MESSAGE_CHARS) {
+      throw new Error('El historial temporal contiene mensajes inválidos');
     }
+    return { role, content };
   });
 }
 
-async function loadChatPreferences() {
-  try {
-    const data = await api('/chat/preferences');
-    chatState.preferences = data.preferences;
-    renderChatPreferences();
-    renderChatNotice();
-    updateComposerState();
-  } catch (err) {
-    showChatError(err.message);
-  }
-}
+async function loadConversationHistory(userId, conversationId) {
+  const ownership = await query(`
+    SELECT id
+    FROM chat_conversations
+    WHERE id = $1 AND user_id = $2
+  `, [conversationId, userId]);
 
-function renderChatPreferences() {
-  const root = document.getElementById('chatPreferences');
-  const p = chatState.preferences;
-  if (!root || !p) return;
-
-  root.innerHTML = `
-    <div class="chat-preferences-title">Privacidad y contexto</div>
-    <label class="chat-toggle-row">
-      <span>
-        <strong>Usar evaluaciones</strong>
-        <small>Permite usar resultados recientes como contexto.</small>
-      </span>
-      <input type="checkbox" id="chatUseEvaluations" ${p.usarEvaluaciones ? 'checked' : ''}>
-    </label>
-    <label class="chat-toggle-row">
-      <span>
-        <strong>Usar diario autorizado</strong>
-        <small>Solo entradas marcadas para el chatbot.</small>
-      </span>
-      <input type="checkbox" id="chatUseDiary" ${p.usarDiario ? 'checked' : ''}>
-    </label>
-    <label class="chat-toggle-row">
-      <span>
-        <strong>Guardar historial</strong>
-        <small>Los mensajes se almacenan cifrados.</small>
-      </span>
-      <input type="checkbox" id="chatSaveHistory" ${p.guardarHistorial ? 'checked' : ''}>
-    </label>
-  `;
-
-  ['chatUseEvaluations', 'chatUseDiary', 'chatSaveHistory'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('change', saveChatPreferences);
-  });
-}
-
-async function saveChatPreferences() {
-  const previousSaveHistory = chatState.preferences?.guardarHistorial;
-  const body = {
-    usarEvaluaciones: Boolean(document.getElementById('chatUseEvaluations')?.checked),
-    usarDiario: Boolean(document.getElementById('chatUseDiary')?.checked),
-    guardarHistorial: Boolean(document.getElementById('chatSaveHistory')?.checked),
-  };
-
-  try {
-    const data = await api('/chat/preferences', { method: 'PUT', body });
-    chatState.preferences = data.preferences;
-    if (previousSaveHistory !== data.preferences.guardarHistorial) {
-      startNewChat();
-      await loadChatConversations();
-    }
-  } catch (err) {
-    showChatError(err.message);
-    await loadChatPreferences();
-  }
-}
-
-function renderChatNotice() {
-  const root = document.getElementById('chatNotice');
-  const accepted = chatState.preferences?.avisoAceptado;
-  if (!root) return;
-
-  if (accepted) {
-    root.innerHTML = '';
-    return;
+  if (!ownership.rows[0]) {
+    const error = new Error('Conversación no encontrada');
+    error.status = 404;
+    throw error;
   }
 
-  root.innerHTML = `
-    <div class="chat-notice-card">
-      <div class="chat-notice-icon">✦</div>
-      <div>
-        <h2>Antes de comenzar</h2>
-        <p>Serenia IA es una herramienta de acompañamiento y orientación general. No realiza diagnósticos ni sustituye psicoterapia, atención médica o servicios de emergencia. Sus respuestas pueden contener errores.</p>
-        <button id="acceptChatNotice" class="btn btn-primary" type="button">Entiendo y quiero continuar</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('acceptChatNotice')?.addEventListener('click', acceptChatNotice);
+  const result = await query(`
+    SELECT m.id, m.conversation_id, m.role, m.created_at, m.encrypted_data
+    FROM chat_messages m
+    WHERE m.conversation_id = $1
+      AND m.exclude_from_ai_context = FALSE
+    ORDER BY m.created_at DESC, m.id DESC
+    LIMIT $2
+  `, [conversationId, MAX_HISTORY_MESSAGES]);
+
+  return result.rows
+    .reverse()
+    .map((row) => decryptChatMessageRow(row, userId))
+    .map(({ role, content }) => ({ role, content }));
 }
 
-async function acceptChatNotice() {
+async function reserveDailyRequest(userId) {
+  const limit = getDailyLimit();
+  const result = await query(`
+    INSERT INTO chat_usage_daily (user_id, usage_date, request_count)
+    VALUES ($1, CURRENT_DATE, 1)
+    ON CONFLICT (user_id, usage_date)
+    DO UPDATE SET
+      request_count = chat_usage_daily.request_count + 1,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE chat_usage_daily.request_count < $2
+    RETURNING request_count
+  `, [userId, limit]);
+
+  return { allowed: Boolean(result.rows[0]), limit };
+}
+
+async function releaseDailyRequest(userId) {
+  await query(`
+    UPDATE chat_usage_daily
+    SET request_count = GREATEST(request_count - 1, 0),
+        updated_at = CURRENT_TIMESTAMP
+    WHERE user_id = $1 AND usage_date = CURRENT_DATE
+  `, [userId]);
+}
+
+async function recordTokenUsage(userId, usage) {
+  await query(`
+    UPDATE chat_usage_daily
+    SET prompt_tokens = prompt_tokens + $2,
+        completion_tokens = completion_tokens + $3,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE user_id = $1 AND usage_date = CURRENT_DATE
+  `, [
+    userId,
+    Number(usage?.prompt_tokens || 0),
+    Number(usage?.completion_tokens || 0),
+  ]);
+}
+
+async function persistExchange(userId, conversationId, userMessage, assistantMessage, excludeFromAiContext = false) {
+  const client = await pool.connect();
   try {
-    const data = await api('/chat/preferences', {
-      method: 'PUT',
-      body: { acceptNotice: true },
-    });
-    chatState.preferences = data.preferences;
-    renderChatNotice();
-    renderChatPreferences();
-    updateComposerState();
-    document.getElementById('chatInput')?.focus();
-  } catch (err) {
-    showChatError(err.message);
-  }
-}
+    await client.query('BEGIN');
+    let id = conversationId;
 
-async function loadChatConversations() {
-  const root = document.getElementById('chatConversationList');
-  if (!root) return;
-
-  try {
-    const data = await api('/chat/conversations');
-    const conversations = data.conversations || [];
-    if (!conversations.length) {
-      root.innerHTML = '<div class="chat-muted">Aún no hay conversaciones guardadas.</div>';
-      return;
-    }
-
-    root.innerHTML = conversations.map((conversation) => `
-      <div class="chat-conversation-row ${Number(chatState.conversationId) === Number(conversation.id) ? 'is-active' : ''}" data-chat-id="${conversation.id}">
-        <button class="chat-conversation-open" type="button" data-open-chat="${conversation.id}">
-          <strong>${escapeHtml(formatChatDate(conversation.updated_at))}</strong>
-          <small>${conversation.message_count} mensajes</small>
-        </button>
-        <button class="chat-delete-btn" type="button" data-delete-chat="${conversation.id}" aria-label="Eliminar conversación" title="Eliminar">×</button>
-      </div>
-    `).join('');
-
-    root.querySelectorAll('[data-open-chat]').forEach((button) => {
-      button.addEventListener('click', () => openConversation(Number(button.dataset.openChat)));
-    });
-    root.querySelectorAll('[data-delete-chat]').forEach((button) => {
-      button.addEventListener('click', () => deleteConversation(Number(button.dataset.deleteChat)));
-    });
-  } catch (err) {
-    root.innerHTML = `<div class="chat-error-inline">${escapeHtml(err.message)}</div>`;
-  }
-}
-
-function renderWelcomeMessage() {
-  const root = document.getElementById('chatMessages');
-  if (!root || root.children.length) return;
-  appendChatMessage('assistant', 'Hola. Soy Serenia IA. Puedes contarme cómo te sientes, ordenar una idea conmigo o pedirme una estrategia sencilla para manejar lo que estás viviendo.');
-}
-
-function startNewChat() {
-  chatState.conversationId = null;
-  chatState.ephemeralHistory = [];
-  const root = document.getElementById('chatMessages');
-  if (root) root.innerHTML = '';
-  renderWelcomeMessage();
-  loadChatConversations();
-  document.getElementById('chatInput')?.focus();
-}
-
-async function openConversation(id) {
-  try {
-    const data = await api(`/chat/conversations/${id}/messages`);
-    chatState.conversationId = id;
-    chatState.ephemeralHistory = [];
-    const root = document.getElementById('chatMessages');
-    if (root) root.innerHTML = '';
-    (data.messages || []).forEach((message) => appendChatMessage(message.role, message.content));
-    if (!(data.messages || []).length) renderWelcomeMessage();
-    await loadChatConversations();
-    scrollChatToBottom();
-  } catch (err) {
-    showChatError(err.message);
-  }
-}
-
-async function deleteConversation(id) {
-  if (!window.confirm('¿Eliminar esta conversación? Esta acción no se puede deshacer.')) return;
-  try {
-    await api(`/chat/conversations/${id}`, { method: 'DELETE' });
-    if (Number(chatState.conversationId) === Number(id)) startNewChat();
-    await loadChatConversations();
-  } catch (err) {
-    showChatError(err.message);
-  }
-}
-
-function appendChatMessage(role, content, extraClass = '') {
-  const root = document.getElementById('chatMessages');
-  if (!root) return null;
-
-  const wrapper = document.createElement('div');
-  wrapper.className = `chat-message ${role === 'user' ? 'is-user' : 'is-assistant'} ${extraClass}`.trim();
-
-  const avatar = document.createElement('div');
-  avatar.className = 'chat-avatar';
-  avatar.textContent = role === 'user' ? 'Tú' : 'S';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'chat-bubble';
-  bubble.textContent = content;
-
-  wrapper.appendChild(avatar);
-  wrapper.appendChild(bubble);
-  root.appendChild(wrapper);
-  scrollChatToBottom();
-  return wrapper;
-}
-
-function showChatError(message) {
-  const node = appendChatMessage('assistant', message, 'is-error');
-  if (node) setTimeout(() => node.classList.add('is-visible'), 10);
-}
-
-function setChatLoading(value) {
-  chatState.loading = value;
-  const button = document.getElementById('chatSendBtn');
-  if (button) button.textContent = value ? 'Pensando…' : 'Enviar';
-  updateComposerState();
-}
-
-function updateComposerState() {
-  const enabled = Boolean(chatState.preferences?.avisoAceptado) && !chatState.loading;
-  const input = document.getElementById('chatInput');
-  const button = document.getElementById('chatSendBtn');
-  if (input) input.disabled = !enabled;
-  if (button) button.disabled = !enabled;
-}
-
-async function sendChatMessage(event) {
-  event.preventDefault();
-  if (chatState.loading || !chatState.preferences?.avisoAceptado) return;
-
-  const input = document.getElementById('chatInput');
-  const message = input?.value.trim() || '';
-  if (!message) return;
-
-  const previousHistory = [...chatState.ephemeralHistory];
-  appendChatMessage('user', message);
-  input.value = '';
-  input.style.height = 'auto';
-  setChatLoading(true);
-
-  const typing = appendChatMessage('assistant', '…', 'is-typing');
-
-  try {
-    const body = { message };
-    if (chatState.preferences.guardarHistorial) {
-      if (chatState.conversationId) body.conversationId = chatState.conversationId;
+    if (!id) {
+      const created = await client.query(`
+        INSERT INTO chat_conversations (user_id)
+        VALUES ($1)
+        RETURNING id
+      `, [userId]);
+      id = created.rows[0].id;
     } else {
-      body.history = previousHistory.slice(-12);
+      const ownership = await client.query(`
+        SELECT id FROM chat_conversations
+        WHERE id = $1 AND user_id = $2
+        FOR UPDATE
+      `, [id, userId]);
+      if (!ownership.rows[0]) {
+        const error = new Error('Conversación no encontrada');
+        error.status = 404;
+        throw error;
+      }
     }
 
-    const data = await api('/chat/message', { method: 'POST', body });
-    typing?.remove();
-    appendChatMessage('assistant', data.reply);
+    await client.query(`
+      INSERT INTO chat_messages (conversation_id, role, encrypted_data, exclude_from_ai_context)
+      VALUES ($1, 'user', $2, $4), ($1, 'assistant', $3, $4)
+    `, [
+      id,
+      encryptChatMessage(userMessage, id, userId),
+      encryptChatMessage(assistantMessage, id, userId),
+      excludeFromAiContext,
+    ]);
 
-    if (chatState.preferences.guardarHistorial) {
-      chatState.conversationId = data.conversationId || chatState.conversationId;
-      await loadChatConversations();
-    } else if (data.source !== 'local_safety') {
-      // Las conversaciones que activan la respuesta local de seguridad no se
-      // reenvían al proveedor de IA en el siguiente turno.
-      chatState.ephemeralHistory.push(
-        { role: 'user', content: message },
-        { role: 'assistant', content: data.reply }
-      );
-      chatState.ephemeralHistory = chatState.ephemeralHistory.slice(-12);
-    }
+    await client.query(`
+      UPDATE chat_conversations
+      SET updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+    `, [id]);
+
+    await client.query('COMMIT');
+    return id;
   } catch (err) {
-    typing?.remove();
-    showChatError(err.message);
+    await client.query('ROLLBACK');
+    throw err;
   } finally {
-    setChatLoading(false);
-    input?.focus();
+    client.release();
   }
 }
 
-function scrollChatToBottom() {
-  const root = document.getElementById('chatMessages');
-  if (root) root.scrollTop = root.scrollHeight;
-}
+router.get('/preferences', authenticate, async (req, res) => {
+  try {
+    const preferences = await getOrCreatePreferences(req.user.id);
+    res.json({ preferences: publicPreferences(preferences) });
+  } catch (err) {
+    console.error('Chat preferences error:', err);
+    res.status(500).json({ error: 'No se pudieron cargar las preferencias del chat' });
+  }
+});
+
+router.put('/preferences', authenticate, async (req, res) => {
+  try {
+    const current = await getOrCreatePreferences(req.user.id);
+    const usarDiario = parseBoolean(req.body.usarDiario, current.usar_diario);
+    const usarEvaluaciones = parseBoolean(req.body.usarEvaluaciones, current.usar_evaluaciones);
+    const guardarHistorial = parseBoolean(req.body.guardarHistorial, current.guardar_historial);
+    const acceptNotice = req.body.acceptNotice === true;
+
+    const result = await query(`
+      UPDATE chat_preferences
+      SET usar_diario = $2,
+          usar_evaluaciones = $3,
+          guardar_historial = $4,
+          aviso_aceptado_at = CASE
+            WHEN $5 THEN COALESCE(aviso_aceptado_at, CURRENT_TIMESTAMP)
+            ELSE aviso_aceptado_at
+          END,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $1
+      RETURNING user_id, usar_diario, usar_evaluaciones, guardar_historial,
+                aviso_aceptado_at, created_at, updated_at
+    `, [req.user.id, usarDiario, usarEvaluaciones, guardarHistorial, acceptNotice]);
+
+    res.json({ preferences: publicPreferences(result.rows[0]) });
+  } catch (err) {
+    console.error('Chat preferences update error:', err);
+    res.status(500).json({ error: 'No se pudieron guardar las preferencias del chat' });
+  }
+});
+
+router.get('/conversations', authenticate, async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT c.id, c.created_at, c.updated_at, COUNT(m.id)::INTEGER AS message_count
+      FROM chat_conversations c
+      LEFT JOIN chat_messages m ON m.conversation_id = c.id
+      WHERE c.user_id = $1
+      GROUP BY c.id
+      ORDER BY c.updated_at DESC
+      LIMIT 50
+    `, [req.user.id]);
+
+    res.json({ conversations: result.rows });
+  } catch (err) {
+    console.error('Chat conversations error:', err);
+    res.status(500).json({ error: 'No se pudieron cargar las conversaciones' });
+  }
+});
+
+router.get('/conversations/:id/messages', authenticate, async (req, res) => {
+  try {
+    const conversationId = Number(req.params.id);
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return res.status(400).json({ error: 'Conversación inválida' });
+    }
+
+    const ownership = await query(`
+      SELECT id FROM chat_conversations
+      WHERE id = $1 AND user_id = $2
+    `, [conversationId, req.user.id]);
+    if (!ownership.rows[0]) return res.status(404).json({ error: 'Conversación no encontrada' });
+
+    const result = await query(`
+      SELECT recent.id, recent.conversation_id, recent.role, recent.created_at, recent.encrypted_data
+      FROM (
+        SELECT m.id, m.conversation_id, m.role, m.created_at, m.encrypted_data
+        FROM chat_messages m
+        WHERE m.conversation_id = $1
+        ORDER BY m.created_at DESC, m.id DESC
+        LIMIT 200
+      ) recent
+      ORDER BY recent.created_at ASC, recent.id ASC
+    `, [conversationId]);
+
+    res.json({
+      conversationId,
+      messages: result.rows.map((row) => decryptChatMessageRow(row, req.user.id)),
+    });
+  } catch (err) {
+    console.error('Chat messages error:', err);
+    res.status(500).json({ error: 'No se pudieron cargar los mensajes' });
+  }
+});
+
+router.delete('/conversations/:id', authenticate, async (req, res) => {
+  try {
+    const conversationId = Number(req.params.id);
+    if (!Number.isInteger(conversationId) || conversationId <= 0) {
+      return res.status(400).json({ error: 'Conversación inválida' });
+    }
+
+    const result = await query(`
+      DELETE FROM chat_conversations
+      WHERE id = $1 AND user_id = $2
+      RETURNING id
+    `, [conversationId, req.user.id]);
+
+    if (!result.rows[0]) return res.status(404).json({ error: 'Conversación no encontrada' });
+    res.json({ message: 'Conversación eliminada' });
+  } catch (err) {
+    console.error('Chat delete error:', err);
+    res.status(500).json({ error: 'No se pudo eliminar la conversación' });
+  }
+});
+
+router.get('/usage', authenticate, async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT request_count, prompt_tokens, completion_tokens
+      FROM chat_usage_daily
+      WHERE user_id = $1 AND usage_date = CURRENT_DATE
+    `, [req.user.id]);
+    const row = result.rows[0] || { request_count: 0, prompt_tokens: 0, completion_tokens: 0 };
+    res.json({
+      usage: {
+        requests: row.request_count,
+        limit: getDailyLimit(),
+        promptTokens: row.prompt_tokens,
+        completionTokens: row.completion_tokens,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'No se pudo consultar el uso del chat' });
+  }
+});
+
+router.post('/message', authenticate, chatLimiter, async (req, res) => {
+  const message = typeof req.body.message === 'string' ? req.body.message.trim() : '';
+  if (!message || message.length > MAX_MESSAGE_CHARS) {
+    return res.status(400).json({ error: `El mensaje debe contener entre 1 y ${MAX_MESSAGE_CHARS} caracteres` });
+  }
+
+  let preferences;
+  try {
+    preferences = await getOrCreatePreferences(req.user.id);
+  } catch (err) {
+    console.error('Chat preference load error:', err);
+    return res.status(500).json({ error: 'No se pudieron consultar las preferencias del chat' });
+  }
+
+  if (!preferences.aviso_aceptado_at) {
+    return res.status(403).json({
+      error: 'Debes aceptar el aviso de Serenia IA antes de iniciar una conversación',
+      code: 'CHAT_NOTICE_REQUIRED',
+    });
+  }
+
+  let history = [];
+  let conversationId = null;
+  try {
+    if (preferences.guardar_historial) {
+      if (req.body.conversationId != null) {
+        conversationId = Number(req.body.conversationId);
+        if (!Number.isInteger(conversationId) || conversationId <= 0) {
+          return res.status(400).json({ error: 'Conversación inválida' });
+        }
+        history = await loadConversationHistory(req.user.id, conversationId);
+      }
+    } else {
+      history = validateClientHistory(req.body.history);
+    }
+  } catch (err) {
+    return res.status(err.status || 400).json({ error: err.message });
+  }
+
+  if (detectImmediateRisk(message)) {
+    const reply = buildImmediateSupportResponse();
+    try {
+      if (preferences.guardar_historial) {
+        conversationId = await persistExchange(req.user.id, conversationId, message, reply, true);
+      }
+    } catch (err) {
+      console.error('Could not persist local safety response:', err);
+    }
+    return res.json({
+      reply,
+      conversationId,
+      source: 'local_safety',
+      contextUsed: { diary: false, evaluations: false },
+    });
+  }
+
+  const providerName = (process.env.AI_PROVIDER || 'mock').toLowerCase();
+  const shouldMeterUsage = providerName !== 'mock';
+  let reserved = false;
+  let providerCompleted = false;
+  try {
+    if (shouldMeterUsage) {
+      const reservation = await reserveDailyRequest(req.user.id);
+      if (!reservation.allowed) {
+        return res.status(429).json({
+          error: `Alcanzaste el límite diario de ${reservation.limit} respuestas de Serenia IA.`,
+          code: 'CHAT_DAILY_LIMIT',
+        });
+      }
+      reserved = true;
+    }
+
+    const authorizedContext = await buildAuthorizedContext(req.user.id, preferences);
+    const systemPrompt = buildSystemPrompt(contextToSystemText(authorizedContext));
+    const messages = [...history, { role: 'user', content: message }];
+
+    const aiResponse = await generateChatResponse({
+      systemPrompt,
+      messages,
+    });
+    providerCompleted = true;
+
+    let historySaved = !preferences.guardar_historial;
+    if (preferences.guardar_historial) {
+      try {
+        conversationId = await persistExchange(
+          req.user.id,
+          conversationId,
+          message,
+          aiResponse.text
+        );
+        historySaved = true;
+      } catch (persistErr) {
+        console.error('Chat history persistence error:', persistErr);
+      }
+    }
+
+    if (shouldMeterUsage) {
+      try {
+        await recordTokenUsage(req.user.id, aiResponse.usage);
+      } catch (usageErr) {
+        console.error('Chat usage accounting error:', usageErr);
+      }
+    }
+
+    res.json({
+      reply: aiResponse.text,
+      conversationId,
+      source: aiResponse.provider,
+      model: aiResponse.model,
+      contextUsed: {
+        diary: authorizedContext.diary.length > 0,
+        evaluations: authorizedContext.evaluations.length > 0,
+      },
+      historySaved,
+    });
+  } catch (err) {
+    if (reserved && !providerCompleted) {
+      try { await releaseDailyRequest(req.user.id); } catch (_) {}
+    }
+    console.error('Chat AI error:', err);
+
+    if (err.code === 'AI_NOT_CONFIGURED') {
+      return res.status(503).json({ error: 'Serenia IA todavía no está configurada en el servidor.' });
+    }
+    if (err.code === 'AI_RATE_LIMIT' || err.status === 429) {
+      return res.status(503).json({ error: 'El servicio de IA alcanzó temporalmente su límite. Intenta nuevamente más tarde.' });
+    }
+    if (err.code === 'AI_TIMEOUT') {
+      return res.status(504).json({ error: 'Serenia IA tardó demasiado en responder. Intenta nuevamente.' });
+    }
+    res.status(502).json({ error: 'No fue posible obtener una respuesta de Serenia IA.' });
+  }
+});
+
+module.exports = router;
