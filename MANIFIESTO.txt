@@ -1,0 +1,23 @@
+PARCHE_SERENIA_CHATBOT_GROQ
+Fecha: 2026-09-10
+
+REEMPLAZAR:
+- server.js
+- public/index.html
+- public/js/app.js
+
+AGREGAR:
+- src/routes/chat.js
+- src/services/ai.js
+- src/services/chatContext.js
+- src/services/chatSchema.js
+- src/utils/chatData.js
+- src/utils/chatSafety.js
+- src/middleware/chatRateLimiter.js
+- public/js/chat.js
+- public/css/chat.css
+- migrations/20260910_chatbot_groq.sql
+- .env.chatbot.example
+- README_PARche_CHATBOT.md
+- test/chatSafety.test.js
+- test/chatAi.test.js
