@@ -16,7 +16,7 @@ async function getOrCreatePreferences(userId) {
   `, [userId]);
 
   const result = await query(`
-    SELECT user_id, usar_diario, usar_evaluaciones, guardar_historial,
+    SELECT user_id, usar_diario, usar_evaluaciones, usar_perfil, guardar_historial,
            aviso_aceptado_at, created_at, updated_at
     FROM chat_preferences
     WHERE user_id = $1
@@ -33,9 +33,30 @@ function trimText(value, maxChars) {
 
 async function buildAuthorizedContext(userId, preferences) {
   const context = {
+    profile: null,
     diary: [],
     evaluations: [],
   };
+
+  if (preferences.usar_perfil) {
+    const profileResult = await query(`
+      SELECT
+        EXTRACT(YEAR FROM age(CURRENT_DATE, fecha_nacimiento))::INTEGER AS edad,
+        sexo,
+        pais
+      FROM users
+      WHERE id = $1
+    `, [userId]);
+
+    const profile = profileResult.rows[0];
+    if (profile) {
+      context.profile = {
+        edad: profile.edad ?? null,
+        sexo: profile.sexo || null,
+        pais: profile.pais || null,
+      };
+    }
+  }
 
   if (preferences.usar_diario) {
     const diaryResult = await query(`
@@ -80,6 +101,18 @@ async function buildAuthorizedContext(userId, preferences) {
 
 function contextToSystemText(context) {
   const sections = [];
+
+  if (context.profile) {
+    sections.push(`Perfil básico autorizado por el usuario (sin nombre, email ni teléfono):\n${JSON.stringify(context.profile)}`);
+    if (context.profile.pais) {
+      const normalizedCountry = String(context.profile.pais).trim().toLowerCase();
+      if (normalizedCountry === 'ecuador' || normalizedCountry === 'ec') {
+        sections.push('RECURSO DE EMERGENCIA VERIFICADO PARA EL PAÍS DEL PERFIL: En Ecuador, el número único de emergencias es ECU 9-1-1.');
+      } else {
+        sections.push('No hay un número de emergencia verificado en Serenia para el país indicado. No inventes teléfonos ni líneas de crisis; indica de forma genérica que contacte los servicios de emergencia de su país.');
+      }
+    }
+  }
 
   if (context.diary.length) {
     sections.push(`Entradas del diario expresamente autorizadas por el usuario:\n${JSON.stringify(context.diary)}`);

@@ -132,6 +132,13 @@ function renderChatPreferences() {
     <div class="chat-preferences-title">Privacidad y contexto</div>
     <label class="chat-toggle-row">
       <span>
+        <strong>Usar perfil básico</strong>
+        <small>Comparte con la IA solo edad, sexo y país. Nunca nombre, email ni teléfono.</small>
+      </span>
+      <input type="checkbox" id="chatUseProfile" ${p.usarPerfil ? 'checked' : ''}>
+    </label>
+    <label class="chat-toggle-row">
+      <span>
         <strong>Usar evaluaciones</strong>
         <small>Permite usar resultados recientes como contexto.</small>
       </span>
@@ -153,7 +160,7 @@ function renderChatPreferences() {
     </label>
   `;
 
-  ['chatUseEvaluations', 'chatUseDiary', 'chatSaveHistory'].forEach((id) => {
+  ['chatUseProfile', 'chatUseEvaluations', 'chatUseDiary', 'chatSaveHistory'].forEach((id) => {
     document.getElementById(id)?.addEventListener('change', saveChatPreferences);
   });
 }
@@ -161,6 +168,7 @@ function renderChatPreferences() {
 async function saveChatPreferences() {
   const previousSaveHistory = chatState.preferences?.guardarHistorial;
   const body = {
+    usarPerfil: Boolean(document.getElementById('chatUseProfile')?.checked),
     usarEvaluaciones: Boolean(document.getElementById('chatUseEvaluations')?.checked),
     usarDiario: Boolean(document.getElementById('chatUseDiary')?.checked),
     guardarHistorial: Boolean(document.getElementById('chatSaveHistory')?.checked),
@@ -294,6 +302,15 @@ async function deleteConversation(id) {
   }
 }
 
+function renderChatMarkdown(content) {
+  // Markdown mínimo y seguro: primero escapamos HTML y después aplicamos
+  // únicamente formato visual conocido. Así **texto** se ve en negrita sin
+  // permitir que una respuesta de la IA inyecte HTML o scripts.
+  return escapeHtml(String(content ?? ''))
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+}
+
 function appendChatMessage(role, content, extraClass = '') {
   const root = document.getElementById('chatMessages');
   if (!root) return null;
@@ -307,7 +324,11 @@ function appendChatMessage(role, content, extraClass = '') {
 
   const bubble = document.createElement('div');
   bubble.className = 'chat-bubble';
-  bubble.textContent = content;
+  if (role === 'assistant' && extraClass !== 'is-typing' && extraClass !== 'is-error') {
+    bubble.innerHTML = renderChatMarkdown(content);
+  } else {
+    bubble.textContent = content;
+  }
 
   wrapper.appendChild(avatar);
   wrapper.appendChild(bubble);

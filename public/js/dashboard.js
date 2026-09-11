@@ -269,46 +269,151 @@ async function renderProfile() {
   try {
     const data = await api('/user/profile');
     const { user } = data;
+    const birthDate = user.fecha_nacimiento ? String(user.fecha_nacimiento).slice(0, 10) : '';
+    const displaySex = user.sexo
+      ? user.sexo.charAt(0).toUpperCase() + user.sexo.slice(1).replaceAll('_', ' ')
+      : 'No especificado';
+
     document.getElementById('app').innerHTML = `
       ${renderNavbar()}
       <div class="dashboard container">
-        <div class="glass" style="padding:32px;border-radius:var(--radius);max-width:600px;margin:0 auto;">
-          <div style="margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(126,87,194,0.12);">
+        <div class="glass" style="padding:32px;border-radius:var(--radius);max-width:640px;margin:0 auto;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(126,87,194,0.12);">
             <h1 style="margin:0;">👤 Mi Perfil</h1>
+            <button class="btn btn-secondary" id="editProfileBtn" type="button" style="width:auto;padding:10px 16px;">Editar</button>
           </div>
-          <div style="display:grid;gap:16px;">
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
+
+          <div id="profileView" style="display:grid;gap:16px;">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Nombre completo</span>
-              <strong>${user.nombre} ${user.apellido}</strong>
+              <strong style="text-align:right;">${escapeHtml(user.nombre)} ${escapeHtml(user.apellido)}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Email</span>
-              <strong>${user.email}</strong>
+              <strong style="text-align:right;">${escapeHtml(user.email)}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Edad</span>
-              <strong>${user.edad} años</strong>
+              <strong>${Number(user.edad) || 0} años</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Fecha de nacimiento</span>
-              <strong>${new Date(user.fecha_nacimiento).toLocaleDateString('es-ES')}</strong>
+              <strong>${user.fecha_nacimiento ? new Date(user.fecha_nacimiento).toLocaleDateString('es-ES') : 'No especificada'}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Teléfono</span>
-              <strong>${user.telefono || 'No especificado'}</strong>
+              <strong style="text-align:right;">${escapeHtml(user.telefono || 'No especificado')}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
               <span style="color:var(--text-light);">Sexo</span>
-              <strong>${user.sexo ? user.sexo.charAt(0).toUpperCase() + user.sexo.slice(1).replace('_', ' ') : 'No especificado'}</strong>
+              <strong style="text-align:right;">${escapeHtml(displaySex)}</strong>
             </div>
-            <div style="display:flex;justify-content:space-between;padding:12px 0;">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid rgba(126,87,194,0.1);">
+              <span style="color:var(--text-light);">País</span>
+              <strong style="text-align:right;">${escapeHtml(user.pais || 'No especificado')}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:20px;padding:12px 0;">
               <span style="color:var(--text-light);">Miembro desde</span>
               <strong>${new Date(user.created_at).toLocaleDateString('es-ES')}</strong>
             </div>
           </div>
+
+          <form id="profileEditForm" style="display:none;gap:16px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" name="nombre" required maxlength="50" value="${escapeHtml(user.nombre)}">
+              </div>
+              <div class="form-group">
+                <label>Apellido</label>
+                <input type="text" name="apellido" required maxlength="50" value="${escapeHtml(user.apellido)}">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label>Fecha de nacimiento</label>
+                <input type="date" name="fechaNacimiento" required value="${escapeHtml(birthDate)}">
+              </div>
+              <div class="form-group">
+                <label>Sexo</label>
+                <select name="sexo">
+                  <option value="">Seleccionar...</option>
+                  <option value="masculino" ${user.sexo === 'masculino' ? 'selected' : ''}>Masculino</option>
+                  <option value="femenino" ${user.sexo === 'femenino' ? 'selected' : ''}>Femenino</option>
+                  <option value="otro" ${user.sexo === 'otro' ? 'selected' : ''}>Otro</option>
+                  <option value="prefiero_no_decir" ${user.sexo === 'prefiero_no_decir' ? 'selected' : ''}>Prefiero no decir</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="tel" name="telefono" maxlength="20" value="${escapeHtml(user.telefono || '')}" placeholder="Opcional">
+            </div>
+
+            <div class="form-group">
+              <label>País</label>
+              <input type="text" name="pais" maxlength="80" list="countrySuggestions" value="${escapeHtml(user.pais || '')}" placeholder="Ej. Ecuador">
+              <datalist id="countrySuggestions">
+                <option value="Ecuador"></option>
+                <option value="Colombia"></option>
+                <option value="Perú"></option>
+                <option value="México"></option>
+                <option value="Argentina"></option>
+                <option value="Chile"></option>
+                <option value="España"></option>
+                <option value="Estados Unidos"></option>
+              </datalist>
+              <small style="display:block;margin-top:6px;color:var(--text-light);">Serenia IA puede usar el país para evitar sugerir recursos de emergencia de otro lugar.</small>
+            </div>
+
+            <div id="profileEditMessage"></div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+              <button class="btn btn-secondary" id="cancelProfileEdit" type="button" style="width:auto;">Cancelar</button>
+              <button class="btn btn-primary" type="submit" style="width:auto;">Guardar cambios</button>
+            </div>
+          </form>
         </div>
       </div>
     `;
+
+    const view = document.getElementById('profileView');
+    const form = document.getElementById('profileEditForm');
+    const editButton = document.getElementById('editProfileBtn');
+
+    const setEditing = (editing) => {
+      if (view) view.style.display = editing ? 'none' : 'grid';
+      if (form) form.style.display = editing ? 'grid' : 'none';
+      if (editButton) editButton.style.display = editing ? 'none' : 'inline-flex';
+    };
+
+    editButton?.addEventListener('click', () => setEditing(true));
+    document.getElementById('cancelProfileEdit')?.addEventListener('click', () => setEditing(false));
+
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const message = document.getElementById('profileEditMessage');
+
+      try {
+        await api('/user/profile', {
+          method: 'PUT',
+          body: {
+            nombre: formData.get('nombre'),
+            apellido: formData.get('apellido'),
+            fechaNacimiento: formData.get('fechaNacimiento'),
+            telefono: formData.get('telefono') || undefined,
+            sexo: formData.get('sexo') || undefined,
+            pais: formData.get('pais') || ''
+          }
+        });
+        if (message) message.innerHTML = '<div class="alert alert-success">✅ Perfil actualizado.</div>';
+        setTimeout(() => renderProfile(), 350);
+      } catch (err) {
+        if (message) message.innerHTML = `<div class="alert alert-error">❌ ${escapeHtml(err.message)}</div>`;
+      }
+    });
   } catch (err) {
     if (!state.token) return;
     alert('Error: ' + err.message);

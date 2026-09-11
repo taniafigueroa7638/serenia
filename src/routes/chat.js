@@ -32,6 +32,7 @@ function publicPreferences(row) {
   return {
     usarDiario: row.usar_diario,
     usarEvaluaciones: row.usar_evaluaciones,
+    usarPerfil: row.usar_perfil,
     guardarHistorial: row.guardar_historial,
     avisoAceptado: Boolean(row.aviso_aceptado_at),
     avisoAceptadoAt: row.aviso_aceptado_at,
@@ -191,6 +192,7 @@ router.put('/preferences', authenticate, async (req, res) => {
     const current = await getOrCreatePreferences(req.user.id);
     const usarDiario = parseBoolean(req.body.usarDiario, current.usar_diario);
     const usarEvaluaciones = parseBoolean(req.body.usarEvaluaciones, current.usar_evaluaciones);
+    const usarPerfil = parseBoolean(req.body.usarPerfil, current.usar_perfil);
     const guardarHistorial = parseBoolean(req.body.guardarHistorial, current.guardar_historial);
     const acceptNotice = req.body.acceptNotice === true;
 
@@ -198,16 +200,17 @@ router.put('/preferences', authenticate, async (req, res) => {
       UPDATE chat_preferences
       SET usar_diario = $2,
           usar_evaluaciones = $3,
-          guardar_historial = $4,
+          usar_perfil = $4,
+          guardar_historial = $5,
           aviso_aceptado_at = CASE
-            WHEN $5 THEN COALESCE(aviso_aceptado_at, CURRENT_TIMESTAMP)
+            WHEN $6 THEN COALESCE(aviso_aceptado_at, CURRENT_TIMESTAMP)
             ELSE aviso_aceptado_at
           END,
           updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $1
-      RETURNING user_id, usar_diario, usar_evaluaciones, guardar_historial,
+      RETURNING user_id, usar_diario, usar_evaluaciones, usar_perfil, guardar_historial,
                 aviso_aceptado_at, created_at, updated_at
-    `, [req.user.id, usarDiario, usarEvaluaciones, guardarHistorial, acceptNotice]);
+    `, [req.user.id, usarDiario, usarEvaluaciones, usarPerfil, guardarHistorial, acceptNotice]);
 
     res.json({ preferences: publicPreferences(result.rows[0]) });
   } catch (err) {
@@ -352,7 +355,14 @@ router.post('/message', authenticate, chatLimiter, async (req, res) => {
   }
 
   if (detectImmediateRisk(message)) {
-    const reply = buildImmediateSupportResponse();
+    let country = null;
+    try {
+      const countryResult = await query('SELECT pais FROM users WHERE id = $1', [req.user.id]);
+      country = countryResult.rows[0]?.pais || null;
+    } catch (countryErr) {
+      console.error('Could not load country for local safety response:', countryErr);
+    }
+    const reply = buildImmediateSupportResponse(country);
     try {
       if (preferences.guardar_historial) {
         conversationId = await persistExchange(req.user.id, conversationId, message, reply, true);
@@ -364,7 +374,7 @@ router.post('/message', authenticate, chatLimiter, async (req, res) => {
       reply,
       conversationId,
       source: 'local_safety',
-      contextUsed: { diary: false, evaluations: false },
+      contextUsed: { profile: false, diary: false, evaluations: false },
     });
   }
 
@@ -423,6 +433,7 @@ router.post('/message', authenticate, chatLimiter, async (req, res) => {
       source: aiResponse.provider,
       model: aiResponse.model,
       contextUsed: {
+        profile: Boolean(authorizedContext.profile),
         diary: authorizedContext.diary.length > 0,
         evaluations: authorizedContext.evaluations.length > 0,
       },

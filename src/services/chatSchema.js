@@ -1,11 +1,15 @@
 const { query } = require('../models');
 
 async function initChatDatabase() {
+  // País del perfil: se usa localmente y, solo con permiso, como contexto de IA.
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pais VARCHAR(80)`);
+
   await query(`
     CREATE TABLE IF NOT EXISTS chat_preferences (
       user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       usar_diario BOOLEAN NOT NULL DEFAULT FALSE,
       usar_evaluaciones BOOLEAN NOT NULL DEFAULT FALSE,
+      usar_perfil BOOLEAN NOT NULL DEFAULT FALSE,
       guardar_historial BOOLEAN NOT NULL DEFAULT TRUE,
       aviso_aceptado_at TIMESTAMP,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -45,6 +49,7 @@ async function initChatDatabase() {
     )
   `);
 
+  await query(`ALTER TABLE chat_preferences ADD COLUMN IF NOT EXISTS usar_perfil BOOLEAN NOT NULL DEFAULT FALSE`);
   await query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS exclude_from_ai_context BOOLEAN NOT NULL DEFAULT FALSE`);
 
   await query(`CREATE INDEX IF NOT EXISTS idx_chat_conv_user_updated ON chat_conversations(user_id, updated_at DESC)`);
