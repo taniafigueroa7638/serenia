@@ -1,0 +1,356 @@
+/* Serenia - Ambientes de calma y ASMR */
+
+.soundscape-home-card {
+  min-height: 220px;
+}
+
+.soundscape-home-icon {
+  width: 72px;
+  height: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+  font-size: 36px;
+  background: linear-gradient(145deg, rgba(126, 87, 194, 0.12), rgba(88, 180, 160, 0.14));
+  box-shadow: inset 0 0 0 1px rgba(126, 87, 194, 0.08);
+  flex: 0 0 auto;
+}
+
+.soundscape-page {
+  padding-top: 28px;
+  padding-bottom: 56px;
+}
+
+.soundscape-page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.soundscape-page-header h1 {
+  margin: 4px 0 8px;
+  color: var(--primary-dark);
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.soundscape-page-header p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--text-light);
+  line-height: 1.65;
+}
+
+.soundscape-eyebrow {
+  display: inline-block;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.soundscape-back-button,
+.soundscape-toolbar-button,
+.soundscape-icon-button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.soundscape-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(126, 87, 194, 0.09);
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.soundscape-shell {
+  padding: 24px;
+  border-radius: var(--radius);
+}
+
+.soundscape-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(126, 87, 194, 0.12);
+}
+
+.soundscape-toolbar-main,
+.soundscape-toolbar-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.soundscape-toolbar-button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  font-weight: 750;
+  box-shadow: 0 7px 16px rgba(94, 53, 177, 0.16);
+}
+
+.soundscape-toolbar-button.danger-soft {
+  background: rgba(215, 68, 74, 0.09);
+  color: #c53e43;
+  box-shadow: none;
+}
+
+.soundscape-toolbar-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.soundscape-select-field {
+  display: grid;
+  gap: 5px;
+}
+
+.soundscape-select-field > span {
+  color: var(--text-light);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.soundscape-select-field select {
+  min-height: 42px;
+  min-width: 150px;
+  padding: 0 34px 0 12px;
+  border: 1px solid rgba(126, 87, 194, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--text);
+  font: inherit;
+}
+
+.soundscape-select-field.timer-field select {
+  min-width: 120px;
+}
+
+.soundscape-icon-button {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(126, 87, 194, 0.09);
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+
+.soundscape-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 12px 15px;
+  border-radius: 14px;
+  background: rgba(126, 87, 194, 0.055);
+}
+
+.soundscape-status-row > div {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.soundscape-status-row span,
+.soundscape-status-row p {
+  color: var(--text-light);
+  font-size: 13px;
+}
+
+.soundscape-status-row strong {
+  color: var(--primary-dark);
+  font-size: 20px;
+}
+
+.soundscape-status-row p {
+  margin: 0;
+}
+
+.soundscape-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+  gap: 14px;
+}
+
+.soundscape-sound-card {
+  overflow: hidden;
+  border: 1px solid rgba(126, 87, 194, 0.13);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.soundscape-sound-card.is-playing {
+  border-color: rgba(126, 87, 194, 0.4);
+  box-shadow: 0 10px 24px rgba(94, 53, 177, 0.1);
+  transform: translateY(-1px);
+}
+
+.soundscape-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 11px;
+  padding: 15px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.soundscape-sound-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(126, 87, 194, 0.075);
+  font-size: 24px;
+}
+
+.soundscape-sound-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.soundscape-sound-copy strong {
+  color: var(--primary-dark);
+  font-size: 15px;
+}
+
+.soundscape-sound-copy small {
+  overflow: hidden;
+  color: var(--text-light);
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.soundscape-play-indicator {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(126, 87, 194, 0.11);
+  color: var(--primary-dark);
+  font-size: 11px;
+}
+
+.soundscape-sound-card.is-playing .soundscape-play-indicator {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+}
+
+.soundscape-controls {
+  display: grid;
+  gap: 11px;
+  padding: 0 15px 15px;
+}
+
+.soundscape-controls label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+  color: var(--text-light);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.soundscape-controls output {
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.soundscape-controls input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.soundscape-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: rgba(73, 169, 138, 0.07);
+}
+
+.soundscape-footer p {
+  margin: 0;
+  color: var(--text-light);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 780px) {
+  .soundscape-page {
+    padding-top: 18px;
+  }
+
+  .soundscape-page-header {
+    display: grid;
+    gap: 12px;
+  }
+
+  .soundscape-back-button {
+    width: max-content;
+    margin-top: 0;
+  }
+
+  .soundscape-shell {
+    padding: 16px;
+  }
+
+  .soundscape-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .soundscape-toolbar-main,
+  .soundscape-toolbar-secondary {
+    width: 100%;
+  }
+
+  .soundscape-toolbar-main .soundscape-toolbar-button {
+    flex: 1;
+  }
+
+  .soundscape-select-field {
+    flex: 1 1 160px;
+  }
+
+  .soundscape-select-field select {
+    width: 100%;
+  }
+
+  .soundscape-grid {
+    grid-template-columns: 1fr;
+  }
+}
