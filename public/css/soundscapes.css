@@ -163,6 +163,31 @@
   background: rgba(126, 87, 194, 0.055);
 }
 
+
+.soundscape-master-volume {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 220px) auto;
+  align-items: center;
+  gap: 9px;
+  min-width: min(100%, 330px);
+  color: var(--text-light);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.soundscape-master-volume input[type='range'] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.soundscape-master-volume output {
+  min-width: 36px;
+  color: var(--primary-dark);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: right;
+}
+
 .soundscape-status-row > div {
   display: flex;
   align-items: baseline;
@@ -352,5 +377,17 @@
 
   .soundscape-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 780px) {
+  .soundscape-status-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .soundscape-master-volume {
+    grid-template-columns: auto 1fr auto;
+    width: 100%;
   }
 }

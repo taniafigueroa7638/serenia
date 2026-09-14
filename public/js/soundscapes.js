@@ -8,26 +8,38 @@ const SERENIA_SOUND_PRESET_KEYS = {
 
 const SERENIA_SOUND_CATALOG = {
   ambient: [
-    { id: 'rain', icon: '🌧️', name: 'Lluvia suave', description: 'Textura ligera de lluvia continua.', engine: 'rain' },
-    { id: 'ocean', icon: '🌊', name: 'Olas', description: 'Movimiento lento parecido al vaivén del mar.', engine: 'ocean' },
-    { id: 'wind', icon: '🍃', name: 'Viento', description: 'Brisa suave y envolvente.', engine: 'wind' },
-    { id: 'forest', icon: '🌲', name: 'Bosque', description: 'Fondo natural con pequeños trinos.', engine: 'forest' },
-    { id: 'fire', icon: '🔥', name: 'Chimenea', description: 'Calidez suave con pequeños crepitares.', engine: 'fire' },
-    { id: 'stream', icon: '💧', name: 'Riachuelo', description: 'Agua ligera y constante.', engine: 'stream' },
-    { id: 'white', icon: '☁️', name: 'Ruido blanco', description: 'Sonido uniforme para enmascarar distracciones.', engine: 'white' },
-    { id: 'pink', icon: '🌸', name: 'Ruido rosa', description: 'Más suave que el ruido blanco.', engine: 'pink' },
-    { id: 'brown', icon: '🟤', name: 'Ruido marrón', description: 'Grave, profundo y estable.', engine: 'brown' },
-    { id: 'cafe', icon: '☕', name: 'Cafetería tranquila', description: 'Murmullo tenue y cálido de fondo.', engine: 'cafe' },
+    { id: 'rain', icon: '🌧️', name: 'Lluvia suave', description: 'Lluvia fina y continua con gotas ocasionales.', engine: 'rain', defaultVolume: 58, trim: 1.18 },
+    { id: 'ocean', icon: '🌊', name: 'Olas', description: 'Oleaje grave con subidas y bajadas lentas.', engine: 'ocean', defaultVolume: 62, trim: 1.22 },
+    { id: 'wind', icon: '🍃', name: 'Viento', description: 'Brisa que cambia lentamente de intensidad y tono.', engine: 'wind', defaultVolume: 58, trim: 1.18 },
+    { id: 'forest', icon: '🌲', name: 'Bosque', description: 'Fondo natural, hojas y pequeños trinos.', engine: 'forest', defaultVolume: 58, trim: 1.35 },
+    { id: 'fire', icon: '🔥', name: 'Chimenea', description: 'Fondo cálido con crepitaciones marcadas.', engine: 'fire', defaultVolume: 60, trim: 1.35 },
+    { id: 'stream', icon: '💧', name: 'Riachuelo', description: 'Agua corriente ligera con pequeñas gotas.', engine: 'stream', defaultVolume: 62, trim: 1.30 },
+    { id: 'storm', icon: '⛈️', name: 'Tormenta lejana', description: 'Lluvia más oscura con truenos suaves a distancia.', engine: 'storm', defaultVolume: 58, trim: 1.12 },
+    { id: 'night', icon: '🌙', name: 'Noche con grillos', description: 'Ambiente nocturno con grillos espaciados.', engine: 'night', defaultVolume: 60, trim: 1.30 },
+    { id: 'waterfall', icon: '🏞️', name: 'Cascada', description: 'Caudal amplio y brillante, más intenso que el riachuelo.', engine: 'waterfall', defaultVolume: 54, trim: 1.08 },
+    { id: 'fan', icon: '🌀', name: 'Ventilador', description: 'Zumbido estable y suave con movimiento periódico.', engine: 'fan', defaultVolume: 58, trim: 1.25 },
+    { id: 'airplane', icon: '✈️', name: 'Cabina de avión', description: 'Rumor grave y constante de cabina en vuelo.', engine: 'airplane', defaultVolume: 56, trim: 1.20 },
+    { id: 'chimes', icon: '🔔', name: 'Campanas suaves', description: 'Tonos claros y espaciados sobre un fondo muy tenue.', engine: 'chimes', defaultVolume: 58, trim: 1.28 },
+    { id: 'white', icon: '☁️', name: 'Ruido blanco', description: 'Textura brillante y uniforme para enmascarar distracciones.', engine: 'white', defaultVolume: 46, trim: 0.96 },
+    { id: 'pink', icon: '🌸', name: 'Ruido rosa', description: 'Ruido equilibrado, más suave y cálido que el blanco.', engine: 'pink', defaultVolume: 52, trim: 1.04 },
+    { id: 'brown', icon: '🟤', name: 'Ruido marrón', description: 'Textura grave, profunda y estable.', engine: 'brown', defaultVolume: 54, trim: 1.12 },
+    { id: 'cafe', icon: '☕', name: 'Cafetería tranquila', description: 'Murmullo cálido con pequeños sonidos de vajilla.', engine: 'cafe', defaultVolume: 64, trim: 1.42 },
   ],
   asmr: [
-    { id: 'tapping', icon: '🤏', name: 'Golpecitos', description: 'Golpes suaves y espaciados.', engine: 'tapping' },
-    { id: 'brushing', icon: '🪶', name: 'Cepillado', description: 'Textura continua y delicada.', engine: 'brushing' },
-    { id: 'keyboard', icon: '⌨️', name: 'Teclado', description: 'Pulsaciones ligeras e irregulares.', engine: 'keyboard' },
-    { id: 'paper', icon: '📄', name: 'Papel', description: 'Roce suave y movimientos breves.', engine: 'paper' },
-    { id: 'drops', icon: '💧', name: 'Gotas', description: 'Gotas aisladas con resonancia suave.', engine: 'drops' },
-    { id: 'whisper', icon: '🤫', name: 'Susurro ambiental', description: 'Aire filtrado muy tenue, sin voces reales.', engine: 'whisper' },
-    { id: 'crinkle', icon: '✨', name: 'Textura crujiente', description: 'Pequeños crujidos relajantes.', engine: 'crinkle' },
-    { id: 'softclicks', icon: '🫰', name: 'Clics suaves', description: 'Clics cortos y calmados.', engine: 'softclicks' },
+    { id: 'tapping', icon: '🤏', name: 'Golpecitos', description: 'Golpes redondos y espaciados.', engine: 'tapping', defaultVolume: 62, trim: 1.30 },
+    { id: 'brushing', icon: '🪶', name: 'Cepillado', description: 'Roce continuo, suave y aireado.', engine: 'brushing', defaultVolume: 66, trim: 1.45 },
+    { id: 'keyboard', icon: '⌨️', name: 'Teclado', description: 'Pulsaciones cortas, rápidas e irregulares.', engine: 'keyboard', defaultVolume: 60, trim: 1.30 },
+    { id: 'paper', icon: '📄', name: 'Papel', description: 'Roce de hoja con movimientos más largos.', engine: 'paper', defaultVolume: 68, trim: 1.48 },
+    { id: 'drops', icon: '💧', name: 'Gotas', description: 'Gotas aisladas con resonancia clara.', engine: 'drops', defaultVolume: 60, trim: 1.22 },
+    { id: 'whisper', icon: '🤫', name: 'Susurro ambiental', description: 'Aire filtrado muy tenue, sin voces reales.', engine: 'whisper', defaultVolume: 70, trim: 1.62 },
+    { id: 'crinkle', icon: '✨', name: 'Textura crujiente', description: 'Crujidos pequeños, secos y frecuentes.', engine: 'crinkle', defaultVolume: 62, trim: 1.40 },
+    { id: 'softclicks', icon: '🫰', name: 'Clics suaves', description: 'Clics redondos y calmados.', engine: 'softclicks', defaultVolume: 60, trim: 1.28 },
+    { id: 'scratch', icon: '〰️', name: 'Rascado suave', description: 'Ráfagas cortas de textura fina.', engine: 'scratch', defaultVolume: 64, trim: 1.38 },
+    { id: 'fabric', icon: '🧣', name: 'Tela', description: 'Roce de tela lento, grave y envolvente.', engine: 'fabric', defaultVolume: 66, trim: 1.42 },
+    { id: 'wood', icon: '🪵', name: 'Madera', description: 'Toques bajos con una resonancia seca.', engine: 'wood', defaultVolume: 60, trim: 1.28 },
+    { id: 'glass', icon: '🥛', name: 'Vidrio', description: 'Pequeños tintineos claros con decay largo.', engine: 'glass', defaultVolume: 56, trim: 1.18 },
+    { id: 'pencil', icon: '✏️', name: 'Lápiz', description: 'Trazos cortos como escritura sobre papel.', engine: 'pencil', defaultVolume: 66, trim: 1.48 },
+    { id: 'scissors', icon: '✂️', name: 'Tijeras suaves', description: 'Cortes dobles, ligeros y espaciados.', engine: 'scissors', defaultVolume: 58, trim: 1.24 },
   ],
 };
 
@@ -146,10 +158,15 @@ function renderSoundscapePage(mode) {
         </div>
 
         <div class="soundscape-status-row">
-          <div>
+          <div class="soundscape-active-summary">
             <span>Sonidos activos</span>
             <strong id="soundscapeActiveCount">0</strong>
           </div>
+          <label class="soundscape-master-volume">
+            <span>Volumen general</span>
+            <input id="soundscapeMasterVolume" type="range" min="0" max="100" value="82" step="1" aria-label="Volumen general">
+            <output id="soundscapeMasterOutput">82%</output>
+          </label>
           <p id="soundscapeTimerStatus">Sin temporizador</p>
         </div>
 
@@ -183,8 +200,8 @@ function renderSoundCard(sound, isAsmr) {
       <div class="soundscape-controls">
         <label>
           <span>Volumen</span>
-          <output id="volumeOutput-${sound.id}">45%</output>
-          <input type="range" min="0" max="100" value="45" step="1" data-sound-volume="${sound.id}" aria-label="Volumen de ${sound.name}">
+          <output id="volumeOutput-${sound.id}">${sound.defaultVolume ?? 55}%</output>
+          <input type="range" min="0" max="100" value="${sound.defaultVolume ?? 55}" step="1" data-sound-volume="${sound.id}" aria-label="Volumen de ${sound.name}">
         </label>
         ${isAsmr ? `
           <label>
@@ -219,6 +236,8 @@ class SereniaSoundscapeController {
     this.timerSelect = document.getElementById('soundscapeTimer');
     this.timerStatus = document.getElementById('soundscapeTimerStatus');
     this.activeCount = document.getElementById('soundscapeActiveCount');
+    this.masterVolumeInput = document.getElementById('soundscapeMasterVolume');
+    this.masterVolumeOutput = document.getElementById('soundscapeMasterOutput');
     this.liveStatus = document.getElementById('soundscapeLiveStatus');
 
     this.bindEvents();
@@ -247,6 +266,7 @@ class SereniaSoundscapeController {
     this.loadButton.addEventListener('click', () => this.loadSelectedPreset());
     this.deleteButton.addEventListener('click', () => this.deleteSelectedPreset());
     this.timerSelect.addEventListener('change', () => this.setTimer(Number(this.timerSelect.value)));
+    this.masterVolumeInput.addEventListener('input', () => this.setMasterVolume(Number(this.masterVolumeInput.value)));
   }
 
   async ensureAudio() {
@@ -255,8 +275,15 @@ class SereniaSoundscapeController {
       if (!AudioContextClass) throw new Error('Web Audio API no disponible');
       this.audioContext = new AudioContextClass();
       this.masterGain = this.audioContext.createGain();
-      this.masterGain.gain.value = 0.72;
-      this.masterGain.connect(this.audioContext.destination);
+      this.masterGain.gain.value = 0.82;
+      this.compressor = this.audioContext.createDynamicsCompressor();
+      this.compressor.threshold.value = -18;
+      this.compressor.knee.value = 18;
+      this.compressor.ratio.value = 4;
+      this.compressor.attack.value = 0.008;
+      this.compressor.release.value = 0.22;
+      this.masterGain.connect(this.compressor);
+      this.compressor.connect(this.audioContext.destination);
     }
     if (this.audioContext.state === 'suspended') await this.audioContext.resume();
   }
@@ -275,7 +302,7 @@ class SereniaSoundscapeController {
     const volumeInput = card.querySelector(`[data-sound-volume="${id}"]`);
     const panInput = card.querySelector(`[data-sound-pan="${id}"]`);
     const gainNode = this.audioContext.createGain();
-    gainNode.gain.value = Number(volumeInput.value) / 100;
+    gainNode.gain.value = this.volumeToGain(sound, Number(volumeInput.value));
 
     let pannerNode = null;
     if (this.audioContext.createStereoPanner) {
@@ -323,6 +350,18 @@ class SereniaSoundscapeController {
       case 'whisper': return this.startWhisper(active);
       case 'crinkle': return this.startCrinkle(active);
       case 'softclicks': return this.startSoftClicks(active);
+      case 'storm': return this.startStorm(active);
+      case 'night': return this.startNight(active);
+      case 'waterfall': return this.startWaterfall(active);
+      case 'fan': return this.startFan(active);
+      case 'airplane': return this.startAirplane(active);
+      case 'chimes': return this.startChimes(active);
+      case 'scratch': return this.startScratch(active);
+      case 'fabric': return this.startFabric(active);
+      case 'wood': return this.startWood(active);
+      case 'glass': return this.startGlass(active);
+      case 'pencil': return this.startPencil(active);
+      case 'scissors': return this.startScissors(active);
       default: return this.startNoise(active, 'pink', { gain: 0.3 });
     }
   }
@@ -532,6 +571,119 @@ class SereniaSoundscapeController {
     this.playSoftClick(active, 0.04);
   }
 
+  startStorm(active) {
+    this.createLoopingNoise(active, 'white', { highpass: 650, lowpass: 7200, gain: 0.25 });
+    const { localGain } = this.createLoopingNoise(active, 'brown', { lowpass: 520, gain: 0.22 });
+    const lfo = this.audioContext.createOscillator();
+    const lfoGain = this.audioContext.createGain();
+    lfo.frequency.value = 0.055;
+    lfoGain.gain.value = 0.08;
+    lfo.connect(lfoGain);
+    lfoGain.connect(localGain.gain);
+    lfo.start();
+    active.nodes.push(lfo, lfoGain);
+    this.startRandomRepeater(active, 4200, 10500, () => this.playThunder(active));
+  }
+
+  startNight(active) {
+    this.createLoopingNoise(active, 'pink', { lowpass: 1500, gain: 0.08 });
+    this.startRandomRepeater(active, 420, 1500, () => this.playCricket(active));
+    this.startRandomRepeater(active, 5000, 10500, () => this.playBird(active));
+  }
+
+  startWaterfall(active) {
+    const low = this.createLoopingNoise(active, 'pink', { lowpass: 2800, gain: 0.31 });
+    const high = this.createLoopingNoise(active, 'white', { highpass: 850, lowpass: 7600, gain: 0.21 });
+    const lfo = this.audioContext.createOscillator();
+    const lfoGain = this.audioContext.createGain();
+    lfo.frequency.value = 0.22;
+    lfoGain.gain.value = 0.045;
+    lfo.connect(lfoGain);
+    lfoGain.connect(high.localGain.gain);
+    lfo.start();
+    active.nodes.push(lfo, lfoGain);
+  }
+
+  startFan(active) {
+    const { localGain } = this.createLoopingNoise(active, 'brown', { lowpass: 1050, gain: 0.24 });
+    const hum = this.audioContext.createOscillator();
+    const humGain = this.audioContext.createGain();
+    hum.type = 'sine';
+    hum.frequency.value = 82;
+    humGain.gain.value = 0.035;
+    hum.connect(humGain);
+    humGain.connect(active.gainNode);
+    hum.start();
+    const lfo = this.audioContext.createOscillator();
+    const lfoGain = this.audioContext.createGain();
+    lfo.frequency.value = 0.72;
+    lfoGain.gain.value = 0.035;
+    lfo.connect(lfoGain);
+    lfoGain.connect(localGain.gain);
+    lfo.start();
+    active.nodes.push(hum, humGain, lfo, lfoGain);
+  }
+
+  startAirplane(active) {
+    this.createLoopingNoise(active, 'brown', { lowpass: 620, gain: 0.30 });
+    this.createLoopingNoise(active, 'pink', { bandpass: 1150, q: 0.5, gain: 0.08 });
+    [92, 184].forEach((frequency, index) => {
+      const osc = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+      osc.type = index ? 'triangle' : 'sine';
+      osc.frequency.value = frequency;
+      gain.gain.value = index ? 0.012 : 0.026;
+      osc.connect(gain);
+      gain.connect(active.gainNode);
+      osc.start();
+      active.nodes.push(osc, gain);
+    });
+  }
+
+  startChimes(active) {
+    this.createLoopingNoise(active, 'pink', { lowpass: 1200, gain: 0.045 });
+    this.startRandomRepeater(active, 2600, 6800, () => this.playChime(active));
+    this.playChime(active, 0.035);
+  }
+
+  startScratch(active) {
+    this.startRandomRepeater(active, 650, 1650, () => this.playScratchPattern(active));
+    this.playScratchPattern(active);
+  }
+
+  startFabric(active) {
+    const { localGain } = this.createLoopingNoise(active, 'pink', { bandpass: 1050, q: 0.38, lowpass: 2600, gain: 0.16 });
+    const lfo = this.audioContext.createOscillator();
+    const lfoGain = this.audioContext.createGain();
+    lfo.frequency.value = 0.28;
+    lfoGain.gain.value = 0.075;
+    lfo.connect(lfoGain);
+    lfoGain.connect(localGain.gain);
+    lfo.start();
+    active.nodes.push(lfo, lfoGain);
+    this.startRandomRepeater(active, 1700, 3300, () => this.playNoiseBurst(active, 0.22, 1150, 0.045));
+  }
+
+  startWood(active) {
+    this.startRandomRepeater(active, 520, 1200, () => this.playWoodTap(active));
+    this.playWoodTap(active);
+  }
+
+  startGlass(active) {
+    this.startRandomRepeater(active, 1300, 3300, () => this.playGlassTone(active));
+    this.playGlassTone(active);
+  }
+
+  startPencil(active) {
+    this.startRandomRepeater(active, 360, 980, () => this.playPencilStroke(active));
+    this.playPencilStroke(active);
+  }
+
+  startScissors(active) {
+    this.startRandomRepeater(active, 800, 2100, () => this.playScissorCut(active));
+    this.playScissorCut(active);
+  }
+
   startRandomRepeater(active, minMs, maxMs, callback) {
     let cancelled = false;
     let timeoutId = null;
@@ -666,12 +818,152 @@ class SereniaSoundscapeController {
     source.start(now);
   }
 
+  playThunder(active) {
+    const duration = 1.1 + Math.random() * 1.2;
+    const sampleRate = this.audioContext.sampleRate;
+    const buffer = this.audioContext.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) {
+      const envelope = Math.exp(-4.2 * i / data.length);
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+    const source = this.audioContext.createBufferSource();
+    source.buffer = buffer;
+    const filter = this.audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 260 + Math.random() * 180;
+    const gain = this.audioContext.createGain();
+    const now = this.audioContext.currentTime;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.16, now + 0.045);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(active.gainNode);
+    source.start(now);
+  }
+
+  playCricket(active) {
+    const now = this.audioContext.currentTime;
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 3000 + Math.random() * 1400;
+    gain.gain.setValueAtTime(0.0001, now);
+    for (let pulse = 0; pulse < 3; pulse += 1) {
+      const t = now + pulse * 0.055;
+      gain.gain.exponentialRampToValueAtTime(0.026, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.038);
+    }
+    osc.connect(gain);
+    gain.connect(active.gainNode);
+    osc.start(now);
+    osc.stop(now + 0.2);
+  }
+
+  playChime(active, volume = 0.05) {
+    const now = this.audioContext.currentTime;
+    const base = [523.25, 659.25, 783.99, 880][Math.floor(Math.random() * 4)];
+    [1, 2.01].forEach((multiple, index) => {
+      const osc = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = base * multiple;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume / (index + 1), now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5 + index * 0.35);
+      osc.connect(gain);
+      gain.connect(active.gainNode);
+      osc.start(now);
+      osc.stop(now + 2);
+    });
+  }
+
+  playScratchPattern(active) {
+    const count = 3 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < count; i += 1) {
+      const timer = window.setTimeout(() => {
+        if (this.active.has(active.sound.id)) this.playNoiseBurst(active, 0.055 + Math.random() * 0.045, 2600 + Math.random() * 1700, 0.048);
+      }, i * (55 + Math.random() * 35));
+      active.timers.push(timer);
+    }
+  }
+
+  playWoodTap(active) {
+    const now = this.audioContext.currentTime;
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(130 + Math.random() * 120, now);
+    osc.frequency.exponentialRampToValueAtTime(85, now + 0.11);
+    gain.gain.setValueAtTime(0.11, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    osc.connect(gain);
+    gain.connect(active.gainNode);
+    osc.start(now);
+    osc.stop(now + 0.19);
+  }
+
+  playGlassTone(active) {
+    const now = this.audioContext.currentTime;
+    const base = 900 + Math.random() * 650;
+    const osc = this.audioContext.createOscillator();
+    const gain = this.audioContext.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = base;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+    osc.connect(gain);
+    gain.connect(active.gainNode);
+    osc.start(now);
+    osc.stop(now + 0.85);
+  }
+
+  playPencilStroke(active) {
+    const count = 4 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < count; i += 1) {
+      const timer = window.setTimeout(() => {
+        if (this.active.has(active.sound.id)) this.playNoiseBurst(active, 0.035, 3500 + Math.random() * 1200, 0.038);
+      }, i * 38);
+      active.timers.push(timer);
+    }
+  }
+
+  playScissorCut(active) {
+    const now = this.audioContext.currentTime;
+    [0, 0.075].forEach((offset, index) => {
+      const osc = this.audioContext.createOscillator();
+      const gain = this.audioContext.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = index ? 1650 : 1180;
+      gain.gain.setValueAtTime(0.045, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.055);
+      osc.connect(gain);
+      gain.connect(active.gainNode);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.06);
+    });
+  }
+
+  volumeToGain(sound, value) {
+    const trim = Number(sound?.trim || 1);
+    return Math.max(0, Math.min(1.7, (value / 100) * trim));
+  }
+
+  setMasterVolume(value) {
+    if (this.masterVolumeOutput) this.masterVolumeOutput.textContent = `${value}%`;
+    if (this.masterGain && this.audioContext) {
+      this.masterGain.gain.setTargetAtTime(value / 100, this.audioContext.currentTime, 0.035);
+    }
+  }
+
   setVolume(id, value) {
     const output = document.getElementById(`volumeOutput-${id}`);
     if (output) output.textContent = `${value}%`;
     const active = this.active.get(id);
     if (active && this.audioContext) {
-      active.gainNode.gain.setTargetAtTime(value / 100, this.audioContext.currentTime, 0.025);
+      active.gainNode.gain.setTargetAtTime(this.volumeToGain(active.sound, value), this.audioContext.currentTime, 0.025);
     }
   }
 
@@ -796,7 +1088,7 @@ class SereniaSoundscapeController {
       if (!card) continue;
       const volume = card.querySelector(`[data-sound-volume="${item.id}"]`);
       const pan = card.querySelector(`[data-sound-pan="${item.id}"]`);
-      volume.value = String(item.volume ?? 45);
+      volume.value = String(item.volume ?? this.catalog.find(sound => sound.id === item.id)?.defaultVolume ?? 55);
       this.setVolume(item.id, Number(volume.value));
       if (pan) {
         pan.value = String(item.pan ?? 0);
