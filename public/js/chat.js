@@ -24,8 +24,8 @@ async function renderChat() {
   app.innerHTML = `
     ${renderNavbar()}
     <main class="chat-page container">
-      <section class="chat-shell glass">
-        <aside class="chat-sidebar">
+      <section class="chat-shell" aria-label="Asistente Serenia IA">
+        <aside class="chat-sidebar glass" aria-label="Historial de conversaciones">
           <div class="chat-sidebar-header">
             <div>
               <span class="chat-eyebrow">Acompañamiento</span>
@@ -34,15 +34,17 @@ async function renderChat() {
             <button class="chat-icon-btn" id="newChatBtn" type="button" title="Nueva conversación" aria-label="Nueva conversación">＋</button>
           </div>
 
-          <div id="chatPreferences" class="chat-preferences"></div>
-
           <div class="chat-history-title">Conversaciones guardadas</div>
           <div id="chatConversationList" class="chat-conversation-list">
             <div class="chat-muted">Cargando…</div>
           </div>
         </aside>
 
-        <section class="chat-main">
+        <section class="chat-main glass" aria-label="Chat con Serenia IA">
+          <div class="chat-main-heading">
+            <strong>Conversación</strong>
+            <span>Un espacio para conversar a tu ritmo</span>
+          </div>
           <div id="chatNotice"></div>
           <div id="chatMessages" class="chat-messages" role="log" tabindex="0" aria-live="polite" aria-label="Conversación con Serenia IA"></div>
           <div class="chat-scroll-controls" aria-label="Navegación de la conversación">
@@ -59,6 +61,10 @@ async function renderChat() {
           </form>
           <div class="chat-disclaimer">Serenia IA ofrece orientación general y puede equivocarse. No sustituye atención profesional ni servicios de emergencia.</div>
         </section>
+
+        <aside class="chat-context-sidebar glass" aria-label="Privacidad y contexto">
+          <div id="chatPreferences" class="chat-preferences"></div>
+        </aside>
       </section>
     </main>
   `;
