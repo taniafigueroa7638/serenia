@@ -1,0 +1,74 @@
+/* Serenia · Respiración guiada y corrección de la barra fija.
+   La altura de navegación la mide breathing.js para escritorio y móvil. */
+.soundscape-page,
+.breathing-page {
+  padding-top: calc(var(--serenia-navbar-height, 82px) + 24px) !important;
+  padding-bottom: 56px;
+  scroll-margin-top: calc(var(--serenia-navbar-height, 82px) + 12px);
+}
+
+.soundscape-page-header,
+.breathing-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px 24px;
+}
+
+.soundscape-page-header > div,
+.breathing-header > div { min-width: 0; flex: 1 1 320px; }
+
+.soundscape-back-button,
+.breathing-back {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.breathing-header { margin-bottom: 22px; }
+.breathing-header h1 { color: var(--primary-dark); font-size: clamp(27px, 4vw, 42px); margin: 4px 0 8px; }
+.breathing-header p { color: var(--text-light); max-width: 670px; line-height: 1.6; }
+.breathing-eyebrow { color: var(--primary); text-transform: uppercase; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
+.breathing-back {
+  display: inline-flex; gap: 8px; align-items: center;
+  margin-top: 6px; padding: 11px 15px;
+  border: 0; border-radius: 12px;
+  background: rgba(126, 87, 194, .11); color: var(--primary-dark);
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.breathing-back:hover { background: rgba(126, 87, 194, .19); }
+.breathing-home-icon {
+  width: 72px; height: 72px; border-radius: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: linear-gradient(145deg, rgba(126, 87, 194, .12), rgba(129, 199, 132, .2));
+  font-size: 38px; flex: 0 0 auto;
+}
+.breathing-home-card { min-height: 220px; }
+.breathing-shell { border-radius: var(--radius); max-width: 900px; margin: 0 auto; padding: clamp(20px, 4vw, 36px); text-align: center; }
+.breathing-settings { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.breathing-settings label { display: grid; gap: 5px; text-align: left; font-weight: 700; font-size: 13px; color: var(--primary-dark); }
+.breathing-settings select { min-height: 43px; min-width: min(100%, 210px); border: 1px solid rgba(126,87,194,.22); border-radius: 11px; background: #fff; color: var(--text); font: inherit; padding: 8px 12px; }
+.breathing-description { color: var(--text-light); margin: 18px 0 4px; line-height: 1.5; min-height: 24px; }
+.breathing-stage { min-height: 330px; position: relative; display: grid; place-items: center; overflow: hidden; isolation: isolate; }
+.breathing-circle { width: 225px; height: 225px; position: absolute; display: grid; place-items: center; border-radius: 50%; transform: scale(.72); background: radial-gradient(circle at 30% 28%, #e3fbf1, #b2e0d3 35%, #9e82dd 100%); box-shadow: 0 0 0 18px rgba(126,87,194,.055), 0 0 0 38px rgba(126,87,194,.035), 0 17px 46px rgba(94,53,177,.18); will-change: transform; }
+.breathing-circle-inner { color: rgba(73,43,130,.45); font-size: 62px; user-select: none; }
+.breathing-phase { position: relative; z-index: 1; padding: 13px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: #36245a; pointer-events: none; text-shadow: 0 1px 2px #e9f9f1; }
+.breathing-phase span { font-size: clamp(16px, 3vw, 23px); font-weight: 800; max-width: 260px; }
+.breathing-phase strong { font-size: clamp(32px, 6vw, 50px); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.breathing-progress { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px 34px; color: var(--text-light); margin: 3px 0 20px; }
+.breathing-progress strong { color: var(--primary-dark); font-variant-numeric: tabular-nums; }
+.breathing-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+.breathing-actions .btn { width: auto; min-width: 115px; padding: 12px 20px; }
+.breathing-actions button:disabled { opacity: .5; cursor: default; }
+.breathing-note { margin-top: 22px; font-size: 12px; color: var(--text-light); line-height: 1.5; }
+@media (max-width: 640px) {
+  .soundscape-page-header,
+  .breathing-header { flex-direction: column; align-items: stretch; }
+  .breathing-settings { flex-direction: column; }
+  .breathing-settings label, .breathing-settings select { width: 100%; }
+  .breathing-stage { min-height: 305px; }
+  .breathing-circle { width: 195px; height: 195px; }
+  .breathing-actions .btn { flex: 1 1 100px; }
+}
+@media (prefers-reduced-motion: reduce) { .breathing-circle { will-change: auto; } }
