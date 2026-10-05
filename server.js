@@ -3,12 +3,14 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
+const verificationRoutes = require('./src/routes/verification');
 const authRoutes = require('./src/routes/auth');
 const questionnaireRoutes = require('./src/routes/questionnaire');
 const userRoutes = require('./src/routes/user');
 const diaryRoutes = require('./src/routes/diary');
 const chatRoutes = require('./src/routes/chat');
 const { initDatabase } = require('./src/models');
+const { initVerificationSchema } = require('./src/services/verificationSchema');
 const { initChatDatabase } = require('./src/services/chatSchema');
 const {
   generalLimiter,
@@ -25,6 +27,7 @@ app.set('trust proxy', 1);
 async function startServer() {
   try {
     await initDatabase();
+    await initVerificationSchema();
     await initChatDatabase();
     console.log('✅ Base de datos lista');
   } catch (err) {
@@ -67,6 +70,10 @@ async function startServer() {
     '/api/auth/forgot-password',
     '/api/auth/reset-password'
   ], sensitiveAuthLimiter);
+
+  // Las rutas nuevas de verificación se montan antes del router histórico para
+  // corregir el flujo de códigos sin alterar el resto de autenticación.
+  app.use('/api/auth', verificationRoutes);
   app.use('/api/auth', authRoutes);
   app.use('/api/questionnaire', questionnaireRoutes);
   app.use('/api/user', userRoutes);
